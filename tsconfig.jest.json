@@ -1,0 +1,22 @@
+{
+  "//": "Standalone config for ts-jest only. The pure logic under test never imports React Native, so we compile it to CommonJS for Node without inheriting the Expo (bundler/noEmit) base.",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "ignoreDeprecations": "6.0",
+    "target": "ES2021",
+    "lib": ["ES2021"],
+    "types": ["jest", "node"],
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": false,
+    "rootDir": ".",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*.ts"]
+}
