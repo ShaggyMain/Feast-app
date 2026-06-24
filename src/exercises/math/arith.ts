@@ -28,9 +28,9 @@ interface Binary {
   category: string;
 }
 
-function makeBinary(rng: Rng, level: Difficulty): Binary {
+function makeBinary(rng: Rng, level: Difficulty, forcedOp?: Op): Binary {
   const ops: Op[] = level === 'easy' ? ['+', '−', '×'] : ['+', '−', '×', '÷'];
-  const op = pick(rng, ops);
+  const op = forcedOp ?? pick(rng, ops);
 
   if (op === '×') {
     const a = level === 'easy' ? randInt(rng, 2, 9) : level === 'medium' ? randInt(rng, 11, 29) : randInt(rng, 12, 99);
@@ -39,8 +39,10 @@ function makeBinary(rng: Rng, level: Difficulty): Binary {
   }
 
   if (op === '÷') {
-    const divisor = level === 'medium' ? randInt(rng, 3, 12) : randInt(rng, 7, 19);
-    const quotient = level === 'medium' ? randInt(rng, 3, 19) : randInt(rng, 11, 40);
+    const [dLo, dHi, qLo, qHi] =
+      level === 'easy' ? [2, 9, 2, 12] : level === 'medium' ? [3, 12, 3, 19] : [7, 19, 11, 40];
+    const divisor = randInt(rng, dLo, dHi);
+    const quotient = randInt(rng, qLo, qHi);
     const dividend = divisor * quotient;
     return { prompt: `${dividend} ÷ ${divisor} = ?`, answer: quotient, category: '÷' };
   }
@@ -70,10 +72,13 @@ function makeChain(rng: Rng): Binary {
   return { prompt: `${a} ${op1} ${b} ${op2} ${c} = ?`, answer, category: 'chain' };
 }
 
-export function generateArith(seed: number, level: Difficulty): GeneratedItem {
+const OPS: readonly Op[] = ['+', '−', '×', '÷'];
+
+export function generateArith(seed: number, level: Difficulty, variant?: string): GeneratedItem {
   const rng = mulberry32(seed);
-  const { prompt, answer, category } =
-    level === 'hard' && rng() < 0.5 ? makeChain(rng) : makeBinary(rng, level);
+  const forced = variant && (OPS as readonly string[]).includes(variant) ? (variant as Op) : undefined;
+  const useChain = !forced && level === 'hard' && rng() < 0.5;
+  const { prompt, answer, category } = useChain ? makeChain(rng) : makeBinary(rng, level, forced);
 
   const distractors = [
     answer + 1,

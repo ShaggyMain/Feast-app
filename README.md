@@ -35,6 +35,11 @@ budowane w sesję tak, by **nie powtarzały się** (deduplikacja promptów w okn
 były równoważone** (np. bez serii ośmiu mnożeń pod rząd). Między sesjami losowy seed daje inne
 zestawy. Każde zadanie ma `category`, a balans pilnuje rozkładu.
 
+**Tryb „tylko jedno działanie"** (1.1): na ekranie startowym można wybrać `Wszystkie / + / − / × / ÷`
+(mechanizm `ExerciseDef.variant`, ogólny — przyda się też w kolejnych modułach).
+**Dźwięk** (opcja w Ustawieniach, domyślnie wył.): krótkie sygnały przy poprawnej/błędnej
+odpowiedzi przez `expo-audio`; pliki WAV syntezowane lokalnie (offline, `core/sound.ts`).
+
 Kolejne moduły (reakcja + serie, przestrzenne, pamięć/radar) dodajemy w M2–M5 — patrz `SPEC.md`.
 
 ---

@@ -23,6 +23,7 @@ import { useResultsStore } from '@/store/results';
 import { useSettingsStore } from '@/store/settings';
 import { bestScore } from '@/store/selectors';
 import { makeId } from '@/core/id';
+import { playFeedback } from '@/core/sound';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { Screen } from '@/ui/Screen';
@@ -61,6 +62,7 @@ export function ExerciseRunner({ exerciseId }: { exerciseId: string }) {
   const results = useResultsStore((s) => s.results);
 
   const [level, setLevel] = useState<Difficulty>(() => useSettingsStore.getState().defaultLevel);
+  const [variant, setVariant] = useState<string | undefined>(() => def?.variant?.default);
   const [phase, setPhase] = useState<Phase>('intro');
   const [baseSeed, setBaseSeed] = useState(makeSeed);
   const [outcomes, setOutcomes] = useState<ItemOutcome[]>([]);
@@ -74,8 +76,8 @@ export function ExerciseRunner({ exerciseId }: { exerciseId: string }) {
   // Pre-build the whole session so prompts are de-duplicated and item types are
   // balanced (variety within a session); regenerated each run via baseSeed.
   const sessionItems = useMemo(
-    () => (def && phase === 'playing' ? buildSession(def, baseSeed, level) : []),
-    [def, phase, baseSeed, level],
+    () => (def && phase === 'playing' ? buildSession(def, baseSeed, level, variant) : []),
+    [def, phase, baseSeed, level, variant],
   );
   const currentItem = phase === 'playing' && index < sessionItems.length ? sessionItems[index] : null;
 
@@ -127,6 +129,8 @@ export function ExerciseRunner({ exerciseId }: { exerciseId: string }) {
         accent={accent}
         level={level}
         onLevel={setLevel}
+        variant={variant}
+        onVariant={setVariant}
         bestForLevel={bestScore(results, def.id, level)}
         onStart={start}
         onBack={() => router.back()}
@@ -187,6 +191,8 @@ function IntroView({
   accent,
   level,
   onLevel,
+  variant,
+  onVariant,
   bestForLevel,
   onStart,
   onBack,
@@ -195,6 +201,8 @@ function IntroView({
   accent: string;
   level: Difficulty;
   onLevel: (l: Difficulty) => void;
+  variant: string | undefined;
+  onVariant: (v: string) => void;
   bestForLevel: number;
   onStart: () => void;
   onBack: () => void;
@@ -208,6 +216,20 @@ function IntroView({
         POZIOM TRUDNOŚCI
       </AppText>
       <SegmentedControl value={level} options={LEVEL_OPTIONS} onChange={onLevel} accent={accent} />
+
+      {def.variant ? (
+        <>
+          <AppText variant="label" style={styles.introLabel}>
+            {def.variant.label}
+          </AppText>
+          <SegmentedControl
+            value={variant ?? def.variant.default}
+            options={def.variant.options}
+            onChange={onVariant}
+            accent={accent}
+          />
+        </>
+      ) : null}
 
       <View style={styles.statRow}>
         <Stat label="Rekord (poziom)" value={String(bestForLevel)} accent={accent} />
@@ -235,6 +257,7 @@ interface PlayItemProps {
 function PlayItem({ item, timeLimitMs, accent, onComplete }: PlayItemProps) {
   const theme = useTheme();
   const hapticsOn = useSettingsStore((s) => s.haptics);
+  const soundOn = useSettingsStore((s) => s.sound);
   const startRef = useRef(Date.now());
   const finishedRef = useRef(false);
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -259,12 +282,13 @@ function PlayItem({ item, timeLimitMs, accent, onComplete }: PlayItemProps) {
             : Haptics.NotificationFeedbackType.Error,
         ).catch(() => {});
       }
+      if (soundOn) playFeedback(graded.correct);
 
       setOutcome(graded);
       setPhase('feedback');
       feedbackTimer.current = setTimeout(() => onComplete(graded), FEEDBACK_MS);
     },
-    [item, timeLimitMs, onComplete, hapticsOn],
+    [item, timeLimitMs, onComplete, hapticsOn, soundOn],
   );
 
   useEffect(() => {

@@ -20,8 +20,10 @@ export default function SettingsScreen() {
   const theme = useTheme();
   const defaultLevel = useSettingsStore((s) => s.defaultLevel);
   const haptics = useSettingsStore((s) => s.haptics);
+  const sound = useSettingsStore((s) => s.sound);
   const setDefaultLevel = useSettingsStore((s) => s.setDefaultLevel);
   const setHaptics = useSettingsStore((s) => s.setHaptics);
+  const setSound = useSettingsStore((s) => s.setSound);
 
   return (
     <Screen>
@@ -42,6 +44,20 @@ export default function SettingsScreen() {
           <Switch
             value={haptics}
             onValueChange={setHaptics}
+            trackColor={{ true: theme.tint, false: theme.border }}
+          />
+        </View>
+      </Card>
+
+      <Card>
+        <View style={styles.switchRow}>
+          <View style={styles.switchText}>
+            <AppText variant="subtitle">Dźwięk</AppText>
+            <AppText variant="bodyMuted">Krótki sygnał przy poprawnej i błędnej odpowiedzi.</AppText>
+          </View>
+          <Switch
+            value={sound}
+            onValueChange={setSound}
             trackColor={{ true: theme.tint, false: theme.border }}
           />
         </View>

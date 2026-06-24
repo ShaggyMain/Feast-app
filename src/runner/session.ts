@@ -22,6 +22,7 @@ export function buildSession(
   def: ExerciseDef,
   baseSeed: number,
   level: Difficulty,
+  variant?: string,
   count = def.itemsPerSession,
 ): GeneratedItem[] {
   const items: GeneratedItem[] = [];
@@ -35,7 +36,7 @@ export function buildSession(
     let chosenScore = -Infinity;
 
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-      const candidate = def.generate(mixSeed(baseSeed, i, attempt), level);
+      const candidate = def.generate(mixSeed(baseSeed, i, attempt), level, variant);
       const category = candidate.category ?? '';
       const isDuplicate = recentPrompts.includes(candidate.prompt);
 

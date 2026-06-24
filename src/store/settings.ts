@@ -11,8 +11,10 @@ import type { Difficulty } from '@/types';
 interface SettingsState {
   defaultLevel: Difficulty;
   haptics: boolean;
+  sound: boolean;
   setDefaultLevel: (level: Difficulty) => void;
   setHaptics: (value: boolean) => void;
+  setSound: (value: boolean) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -20,8 +22,10 @@ export const useSettingsStore = create<SettingsState>()(
     (set) => ({
       defaultLevel: 'medium',
       haptics: true,
+      sound: false,
       setDefaultLevel: (level) => set({ defaultLevel: level }),
       setHaptics: (value) => set({ haptics: value }),
+      setSound: (value) => set({ sound: value }),
     }),
     {
       name: 'feast.settings.v1',

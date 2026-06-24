@@ -59,6 +59,17 @@ export const EXERCISES: ExerciseDef[] = [
     description: 'Dodawanie, odejmowanie, mnożenie i dzielenie bez kalkulatora — 4 opcje.',
     timePerItemSec: 12,
     itemsPerSession: 10,
+    variant: {
+      label: 'DZIAŁANIE',
+      default: 'all',
+      options: [
+        { value: 'all', label: 'Wszystkie' },
+        { value: '+', label: '+' },
+        { value: '−', label: '−' },
+        { value: '×', label: '×' },
+        { value: '÷', label: '÷' },
+      ],
+    },
     generate: generateArith,
   },
   {

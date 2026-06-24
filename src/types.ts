@@ -66,6 +66,17 @@ export interface ItemOutcome {
 }
 
 /**
+ * Optional per-exercise variant selector (e.g. "only multiplication"). Rendered
+ * as a chooser on the exercise intro screen; the chosen value is passed to the
+ * generator. Generators that ignore it simply omit the third argument.
+ */
+export interface VariantSpec {
+  label: string;
+  default: string;
+  options: { value: string; label: string }[];
+}
+
+/**
  * Definition of a runnable exercise. Pure: metadata plus the generator, with no
  * UI concerns. Consumed by the shared ExerciseRunner shell.
  */
@@ -78,7 +89,9 @@ export interface ExerciseDef {
   timePerItemSec: number;
   /** Number of items in one session. */
   itemsPerSession: number;
-  generate: (seed: number, level: Difficulty) => GeneratedItem;
+  /** Optional focus selector (e.g. which operation to drill). */
+  variant?: VariantSpec;
+  generate: (seed: number, level: Difficulty, variant?: string) => GeneratedItem;
 }
 
 /**

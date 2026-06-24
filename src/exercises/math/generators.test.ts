@@ -46,6 +46,20 @@ describe('generateArith (1.1)', () => {
       }
     }
   });
+
+  it('honors the single-operation variant', () => {
+    for (const op of ['+', '−', '×', '÷']) {
+      for (const level of LEVELS) {
+        for (let seed = 0; seed < 120; seed++) {
+          const item = generateArith(seed, level, op);
+          expect(item.category).toBe(op);
+          expect(item.prompt).toContain(` ${op} `);
+          expectSingleCorrectChoice(item);
+          expect(Number(item.answerLabel)).toBe(evalArith(item.prompt));
+        }
+      }
+    }
+  });
 });
 
 describe('generateVst (1.2)', () => {
