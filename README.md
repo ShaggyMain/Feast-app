@@ -49,8 +49,51 @@ Kolejne moduły (matematyka, reakcja, przestrzenne, pamięć/radar) dodajemy w M
 
 > Brak Wi-Fi współdzielonego? Uruchom z tunelem: `npx expo start --tunnel`.
 
-Później, gdy aplikacja będzie gotowa, instalowalny **APK** zbudujemy przez EAS Build
-(`eas build -p android --profile preview`) — to kamień milowy M6.
+---
+
+## Samodzielna aplikacja na telefonie (APK, **bez** Expo Go)
+
+Jeśli chcesz **prawdziwą ikonę aplikacji** na pulpicie i odpalać ją bez Expo Go i bez
+skanowania QR — zbuduj instalowalny **APK**. Apka jest w pełni offline, więc taki plik
+działa całkowicie samodzielnie.
+
+### Wariant A — EAS Build (chmura, zalecane, bez Android Studio)
+
+Potrzebujesz tylko darmowego konta Expo (https://expo.dev/signup).
+
+```bash
+# 1) jednorazowo: zainstaluj eas-cli i zaloguj się
+npm install -g eas-cli
+eas login
+
+# 2) jednorazowo: powiąż projekt z Twoim kontem (zapisze projectId do app.json)
+eas init
+
+# 3) zbuduj instalowalny APK (profil "preview")
+eas build -p android --profile preview
+```
+
+Po kilku minutach EAS pokaże **link do pobrania APK** (i kod QR). Otwórz link na telefonie,
+pobierz `.apk`, uruchom go i potwierdź **„Instaluj z nieznanych źródeł"**. Gotowe — masz
+ikonę „FEAST Trainer" i wchodzisz do aplikacji jednym dotknięciem.
+
+> Kolejne wersje: podnieś `android.versionCode` w `app.json` (1 → 2 → …) i zbuduj ponownie.
+
+### Wariant B — build lokalny (bez konta, ale wymaga Android Studio + JDK)
+
+Z telefonem podłączonym przez USB (włączone *debugowanie USB*) **lub** emulatorem:
+
+```bash
+npx expo run:android --variant release
+```
+
+To skompiluje i zainstaluje aplikację bezpośrednio na urządzeniu. Wymaga zainstalowanego
+**Android Studio** (Android SDK + Java). Pierwsze uruchomienie wygeneruje folder `android/`.
+
+> Zalecenie: dla wygody użyj wariantu A (chmura) — nie wymaga konfigurowania Android Studio.
+
+Konfiguracja profili budowania jest w [`eas.json`](./eas.json) (`preview` = APK do instalacji,
+`production` = AAB do Google Play).
 
 ---
 
