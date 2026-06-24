@@ -18,6 +18,7 @@ import * as Haptics from 'expo-haptics';
 import type { Difficulty, ExerciseDef, ExerciseResult, GeneratedItem, ItemOutcome } from '@/types';
 import { getExercise, getModule } from '@/data/registry';
 import { gradeItem, summarize } from '@/runner/scoring';
+import { buildSession } from '@/runner/session';
 import { useResultsStore } from '@/store/results';
 import { useSettingsStore } from '@/store/settings';
 import { bestScore } from '@/store/selectors';
@@ -70,10 +71,13 @@ export function ExerciseRunner({ exerciseId }: { exerciseId: string }) {
   const timeLimitMs = def ? def.timePerItemSec * 1000 : 0;
   const index = outcomes.length;
 
-  const currentItem = useMemo(
-    () => (def && phase === 'playing' && index < total ? def.generate(baseSeed + index, level) : null),
-    [def, phase, baseSeed, index, total, level],
+  // Pre-build the whole session so prompts are de-duplicated and item types are
+  // balanced (variety within a session); regenerated each run via baseSeed.
+  const sessionItems = useMemo(
+    () => (def && phase === 'playing' ? buildSession(def, baseSeed, level) : []),
+    [def, phase, baseSeed, level],
   );
+  const currentItem = phase === 'playing' && index < sessionItems.length ? sessionItems[index] : null;
 
   useEffect(() => {
     if (!def || phase !== 'playing' || savedResult || total === 0 || outcomes.length < total) return;

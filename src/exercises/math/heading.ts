@@ -74,5 +74,6 @@ export function generateHeading(seed: number, level: Difficulty): GeneratedItem 
     answerLabel: formatHeading(answer),
     hint: 'W prawo = +, w lewo = −. Zawijaj co 360°.',
     figure,
+    category: isReciprocal ? 'reciprocal' : 'turn',
   };
 }

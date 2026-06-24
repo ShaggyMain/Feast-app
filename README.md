@@ -30,6 +30,11 @@ Dodatkowo w M1: **poziomy trudności** (Łatwy/Średni/Trudny) z ekranem startow
 **ekran Ustawień** (domyślny poziom, haptyka), odświeżony **wygląd** (typografia, kafelki
 z akcentem modułu, segmentowany wybór poziomu) i rekordy liczone per poziom.
 
+**Różnorodność sesji** (`runner/session.ts`): zadania generowane proceduralnie są dodatkowo
+budowane w sesję tak, by **nie powtarzały się** (deduplikacja promptów w oknie) i by **typy
+były równoważone** (np. bez serii ośmiu mnożeń pod rząd). Między sesjami losowy seed daje inne
+zestawy. Każde zadanie ma `category`, a balans pilnuje rozkładu.
+
 Kolejne moduły (reakcja + serie, przestrzenne, pamięć/radar) dodajemy w M2–M5 — patrz `SPEC.md`.
 
 ---

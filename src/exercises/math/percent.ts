@@ -48,6 +48,7 @@ export function generatePercent(seed: number, level: Difficulty): GeneratedItem 
 
   let prompt: string;
   let result: number;
+  const category = usePercent ? 'percent' : 'fraction';
 
   if (usePercent) {
     const x = pick(rng, X_BY_LEVEL[level]);
@@ -82,5 +83,6 @@ export function generatePercent(seed: number, level: Difficulty): GeneratedItem 
     correctChoiceId,
     answerLabel: String(result),
     hint: 'Najpierw 10% lub 1 część, potem przeskaluj.',
+    category,
   };
 }

@@ -51,6 +51,11 @@ export interface GeneratedItem {
   hint?: string;
   /** Optional visual aid. */
   figure?: FigureSpec;
+  /**
+   * Optional sub-type tag (e.g. '+', 'fraction', 'reciprocal'). The session
+   * builder uses it to spread item types and avoid repetition within a session.
+   */
+  category?: string;
 }
 
 /** Result of grading one item during a session. */

@@ -2,7 +2,7 @@
   "expo": {
     "name": "FEAST Trainer",
     "slug": "feast-trainer",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "feasttrainer",
@@ -12,7 +12,7 @@
     },
     "android": {
       "package": "com.feasttrainer.app",
-      "versionCode": 2,
+      "versionCode": 3,
       "adaptiveIcon": {
         "backgroundColor": "#0B1220",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

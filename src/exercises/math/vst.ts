@@ -51,5 +51,6 @@ export function generateVst(seed: number, level: Difficulty): GeneratedItem {
     correctValue: answer,
     answerLabel: `${answer} ${unit}`,
     hint: 'Zamień prędkość na km/min: v ÷ 60.',
+    category: ask,
   };
 }
