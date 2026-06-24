@@ -1,13 +1,10 @@
 /**
  * ExerciseRunner — the shared shell every exercise runs inside.
  *
- * Responsibilities (milestone M0):
- *  - drive a session of `itemsPerSession` generated items,
- *  - per-item countdown timer with auto-advance on timeout,
- *  - multiple-choice and numeric-input answering,
- *  - immediate feedback (color + haptics), no penalty for wrong/blank answers,
- *  - scoring + persistence of an ExerciseResult,
- *  - a results screen comparing against the previous best.
+ *  intro  → choose difficulty, see best score, read the method hint
+ *  playing→ per-item countdown, multiple-choice or numeric input, optional
+ *           figure, instant feedback (color + haptics), no penalty for wrong/blank
+ *  done   → accuracy + speed score, compared to the previous best for that level
  *
  * Per-item state lives in <PlayItem>, remounted via `key` for each question so
  * timers and inputs reset cleanly.
@@ -18,10 +15,11 @@ import { useRouter } from 'expo-router';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as Haptics from 'expo-haptics';
 
-import type { ExerciseResult, GeneratedItem, ItemOutcome } from '@/types';
-import { getExercise } from '@/data/registry';
+import type { Difficulty, ExerciseDef, ExerciseResult, GeneratedItem, ItemOutcome } from '@/types';
+import { getExercise, getModule } from '@/data/registry';
 import { gradeItem, summarize } from '@/runner/scoring';
 import { useResultsStore } from '@/store/results';
+import { useSettingsStore } from '@/store/settings';
 import { bestScore } from '@/store/selectors';
 import { makeId } from '@/core/id';
 import { Radius, Spacing } from '@/constants/theme';
@@ -30,12 +28,23 @@ import { Screen } from '@/ui/Screen';
 import { PrimaryButton } from '@/ui/PrimaryButton';
 import { TimerBar } from '@/ui/TimerBar';
 import { Stat } from '@/ui/Stat';
+import { AppText } from '@/ui/Text';
+import { SegmentedControl } from '@/ui/SegmentedControl';
+import { Figure } from '@/ui/Figure';
 
 const FEEDBACK_MS = 650;
+
+const LEVEL_OPTIONS: { value: Difficulty; label: string }[] = [
+  { value: 'easy', label: 'Łatwy' },
+  { value: 'medium', label: 'Średni' },
+  { value: 'hard', label: 'Trudny' },
+];
 
 function makeSeed(): number {
   return Math.floor(Math.random() * 1_000_000);
 }
+
+type Phase = 'intro' | 'playing' | 'done';
 
 export function ExerciseRunner({ exerciseId }: { exerciseId: string }) {
   const theme = useTheme();
@@ -43,32 +52,37 @@ export function ExerciseRunner({ exerciseId }: { exerciseId: string }) {
   useKeepAwake();
 
   const def = useMemo(() => getExercise(exerciseId), [exerciseId]);
+  const accent = useMemo(
+    () => (def ? getModule(def.module)?.color : undefined) ?? theme.tint,
+    [def, theme.tint],
+  );
   const addResult = useResultsStore((s) => s.addResult);
+  const results = useResultsStore((s) => s.results);
 
-  // Snapshot the previous best once, before this session saves anything.
-  const [prevBest] = useState(() => bestScore(useResultsStore.getState().results, exerciseId));
+  const [level, setLevel] = useState<Difficulty>(() => useSettingsStore.getState().defaultLevel);
+  const [phase, setPhase] = useState<Phase>('intro');
   const [baseSeed, setBaseSeed] = useState(makeSeed);
-  const [sessionKey, setSessionKey] = useState(0);
   const [outcomes, setOutcomes] = useState<ItemOutcome[]>([]);
   const [savedResult, setSavedResult] = useState<ExerciseResult | null>(null);
+  const prevBestRef = useRef(0);
 
   const total = def ? def.itemsPerSession : 0;
   const timeLimitMs = def ? def.timePerItemSec * 1000 : 0;
   const index = outcomes.length;
 
   const currentItem = useMemo(
-    () => (def && index < total ? def.generate(baseSeed + index) : null),
-    [def, baseSeed, index, total],
+    () => (def && phase === 'playing' && index < total ? def.generate(baseSeed + index, level) : null),
+    [def, phase, baseSeed, index, total, level],
   );
 
-  // Finalize once the last item is graded.
   useEffect(() => {
-    if (!def || savedResult || total === 0 || outcomes.length < total) return;
+    if (!def || phase !== 'playing' || savedResult || total === 0 || outcomes.length < total) return;
     const summary = summarize(outcomes, timeLimitMs);
     const result: ExerciseResult = {
       id: makeId(),
       module: def.module,
       exercise: def.id,
+      level,
       date: new Date().toISOString(),
       totalItems: summary.totalItems,
       correct: summary.correct,
@@ -78,34 +92,52 @@ export function ExerciseRunner({ exerciseId }: { exerciseId: string }) {
     };
     addResult(result);
     setSavedResult(result);
-  }, [outcomes, total, def, savedResult, timeLimitMs, addResult]);
+    setPhase('done');
+  }, [outcomes, phase, total, def, savedResult, timeLimitMs, addResult, level]);
 
   const handleItemComplete = useCallback((outcome: ItemOutcome) => {
     setOutcomes((prev) => [...prev, outcome]);
   }, []);
 
-  const restart = useCallback(() => {
+  const start = useCallback(() => {
+    prevBestRef.current = def ? bestScore(useResultsStore.getState().results, def.id, level) : 0;
     setOutcomes([]);
     setSavedResult(null);
     setBaseSeed(makeSeed());
-    setSessionKey((k) => k + 1);
-  }, []);
+    setPhase('playing');
+  }, [def, level]);
 
   if (!def) {
     return (
       <Screen>
-        <Text style={[styles.prompt, { color: theme.text }]}>Nie znaleziono ćwiczenia</Text>
+        <AppText variant="title">Nie znaleziono ćwiczenia</AppText>
         <PrimaryButton label="Wróć" variant="secondary" onPress={() => router.back()} />
       </Screen>
     );
   }
 
-  if (savedResult) {
+  if (phase === 'intro') {
+    return (
+      <IntroView
+        def={def}
+        accent={accent}
+        level={level}
+        onLevel={setLevel}
+        bestForLevel={bestScore(results, def.id, level)}
+        onStart={start}
+        onBack={() => router.back()}
+      />
+    );
+  }
+
+  if (phase === 'done' && savedResult) {
     return (
       <ResultsView
         result={savedResult}
-        prevBest={prevBest}
-        onRetry={restart}
+        prevBest={prevBestRef.current}
+        accent={accent}
+        onRetry={start}
+        onChangeLevel={() => setPhase('intro')}
         onBack={() => router.back()}
       />
     );
@@ -117,27 +149,72 @@ export function ExerciseRunner({ exerciseId }: { exerciseId: string }) {
   return (
     <Screen scroll={false}>
       <View style={styles.headerRow}>
-        <Text style={[styles.headerText, { color: theme.textSecondary }]}>
+        <AppText variant="caption">
           Pytanie {Math.min(index + 1, total)} / {total}
-        </Text>
-        <Text style={[styles.headerText, { color: theme.success }]}>✓ {correctSoFar}</Text>
+        </AppText>
+        <AppText variant="caption" color={theme.success}>
+          ✓ {correctSoFar}
+        </AppText>
       </View>
       <View style={[styles.sessionTrack, { backgroundColor: theme.surfaceAlt }]}>
-        <View style={{ flex: sessionProgress, backgroundColor: theme.tint }} />
+        <View style={{ flex: sessionProgress, backgroundColor: accent }} />
         <View style={{ flex: 1 - sessionProgress }} />
       </View>
 
       {currentItem ? (
         <PlayItem
-          key={`${sessionKey}-${index}`}
+          key={`${baseSeed}-${index}`}
           item={currentItem}
           timeLimitMs={timeLimitMs}
-          accent={theme.tint}
+          accent={accent}
           onComplete={handleItemComplete}
         />
       ) : (
         <View style={styles.flexCenter} />
       )}
+    </Screen>
+  );
+}
+
+// ---------------------------------------------------------------------------
+
+function IntroView({
+  def,
+  accent,
+  level,
+  onLevel,
+  bestForLevel,
+  onStart,
+  onBack,
+}: {
+  def: ExerciseDef;
+  accent: string;
+  level: Difficulty;
+  onLevel: (l: Difficulty) => void;
+  bestForLevel: number;
+  onStart: () => void;
+  onBack: () => void;
+}) {
+  return (
+    <Screen>
+      <AppText variant="title">{def.title}</AppText>
+      <AppText variant="bodyMuted">{def.description}</AppText>
+
+      <AppText variant="label" style={styles.introLabel}>
+        POZIOM TRUDNOŚCI
+      </AppText>
+      <SegmentedControl value={level} options={LEVEL_OPTIONS} onChange={onLevel} accent={accent} />
+
+      <View style={styles.statRow}>
+        <Stat label="Rekord (poziom)" value={String(bestForLevel)} accent={accent} />
+        <Stat label="Czas / pyt." value={`${def.timePerItemSec}s`} />
+        <Stat label="Pytania" value={String(def.itemsPerSession)} />
+      </View>
+
+      <View style={styles.actions}>
+        <PrimaryButton label="Start" onPress={onStart} />
+        <PrimaryButton label="Wróć" variant="ghost" onPress={onBack} />
+      </View>
     </Screen>
   );
 }
@@ -153,6 +230,7 @@ interface PlayItemProps {
 
 function PlayItem({ item, timeLimitMs, accent, onComplete }: PlayItemProps) {
   const theme = useTheme();
+  const hapticsOn = useSettingsStore((s) => s.haptics);
   const startRef = useRef(Date.now());
   const finishedRef = useRef(false);
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -170,7 +248,7 @@ function PlayItem({ item, timeLimitMs, accent, onComplete }: PlayItemProps) {
       const responseMs = payload.answered ? Date.now() - startRef.current : timeLimitMs;
       const graded = gradeItem(item, { ...payload, responseMs });
 
-      if (Platform.OS !== 'web') {
+      if (hapticsOn && Platform.OS !== 'web') {
         Haptics.notificationAsync(
           graded.correct
             ? Haptics.NotificationFeedbackType.Success
@@ -182,10 +260,9 @@ function PlayItem({ item, timeLimitMs, accent, onComplete }: PlayItemProps) {
       setPhase('feedback');
       feedbackTimer.current = setTimeout(() => onComplete(graded), FEEDBACK_MS);
     },
-    [item, timeLimitMs, onComplete],
+    [item, timeLimitMs, onComplete, hapticsOn],
   );
 
-  // Per-item countdown.
   useEffect(() => {
     if (phase !== 'answering') return;
     const id = setInterval(() => {
@@ -200,9 +277,12 @@ function PlayItem({ item, timeLimitMs, accent, onComplete }: PlayItemProps) {
     return () => clearInterval(id);
   }, [phase, timeLimitMs, finish]);
 
-  useEffect(() => () => {
-    if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+    },
+    [],
+  );
 
   const onChoose = (id: string) => {
     if (phase !== 'answering') return;
@@ -224,18 +304,13 @@ function PlayItem({ item, timeLimitMs, accent, onComplete }: PlayItemProps) {
       <TimerBar progress={remainingMs / timeLimitMs} />
 
       <View style={styles.promptBlock}>
+        {item.figure ? <Figure spec={item.figure} accent={accent} /> : null}
         <Text style={[styles.prompt, { color: theme.text }]}>{item.prompt}</Text>
-        {item.hint ? (
-          <Text style={[styles.hint, { color: theme.textSecondary }]}>{item.hint}</Text>
-        ) : null}
+        {item.hint ? <Text style={[styles.hint, { color: theme.textSecondary }]}>{item.hint}</Text> : null}
       </View>
 
       {showFeedback ? (
-        <Text
-          style={[
-            styles.feedback,
-            { color: outcome?.correct ? theme.success : theme.danger },
-          ]}>
+        <Text style={[styles.feedback, { color: outcome?.correct ? theme.success : theme.danger }]}>
           {outcome?.correct
             ? 'Dobrze!'
             : outcome?.answered
@@ -269,10 +344,7 @@ function PlayItem({ item, timeLimitMs, accent, onComplete }: PlayItemProps) {
               <Text
                 key={choice.id}
                 onPress={() => onChoose(choice.id)}
-                style={[
-                  styles.choice,
-                  { backgroundColor: bg, borderColor, color: labelColor },
-                ]}>
+                style={[styles.choice, { backgroundColor: bg, borderColor, color: labelColor }]}>
                 {choice.label}
               </Text>
             );
@@ -311,12 +383,16 @@ function PlayItem({ item, timeLimitMs, accent, onComplete }: PlayItemProps) {
 function ResultsView({
   result,
   prevBest,
+  accent,
   onRetry,
+  onChangeLevel,
   onBack,
 }: {
   result: ExerciseResult;
   prevBest: number;
+  accent: string;
   onRetry: () => void;
+  onChangeLevel: () => void;
   onBack: () => void;
 }) {
   const theme = useTheme();
@@ -324,40 +400,37 @@ function ResultsView({
   const accuracyPct = Math.round(result.accuracy * 100);
   const avgSec = (result.avgResponseMs / 1000).toFixed(1);
   const isRecord = result.score > prevBest;
+  const levelLabel = LEVEL_OPTIONS.find((l) => l.value === result.level)?.label ?? result.level;
 
   return (
     <Screen>
-      <Text style={[styles.resultTitle, { color: theme.text }]}>Koniec sesji</Text>
+      <AppText variant="title">Koniec sesji</AppText>
+      <AppText variant="caption">Poziom: {levelLabel}</AppText>
 
       <View style={styles.statRow}>
-        <Stat label="Wynik" value={String(result.score)} accent={theme.tint} />
+        <Stat label="Wynik" value={String(result.score)} accent={accent} />
         <Stat label="Trafność" value={`${accuracyPct}%`} />
         <Stat label="Śr. czas" value={`${avgSec}s`} />
       </View>
 
-      <Text style={[styles.resultLine, { color: theme.textSecondary }]}>
+      <AppText variant="bodyMuted">
         Poprawne odpowiedzi: {result.correct} / {result.totalItems}
-      </Text>
+      </AppText>
 
       <View
-        style={[
-          styles.recordBanner,
-          { backgroundColor: isRecord ? theme.success : theme.surfaceAlt },
-        ]}>
+        style={[styles.recordBanner, { backgroundColor: isRecord ? theme.success : theme.surfaceAlt }]}>
         <Text
-          style={[
-            styles.recordText,
-            { color: isRecord ? theme.successText : theme.textSecondary },
-          ]}>
+          style={[styles.recordText, { color: isRecord ? theme.successText : theme.textSecondary }]}>
           {isRecord
-            ? `Nowy rekord! Poprzedni najlepszy: ${prevBest}`
-            : `Najlepszy wynik: ${Math.max(prevBest, result.score)}`}
+            ? `Nowy rekord (${levelLabel})! Poprzedni: ${prevBest}`
+            : `Najlepszy wynik (${levelLabel}): ${Math.max(prevBest, result.score)}`}
         </Text>
       </View>
 
       <View style={styles.actions}>
         <PrimaryButton label="Jeszcze raz" onPress={onRetry} />
-        <PrimaryButton label="Statystyki" variant="secondary" onPress={() => router.push('/stats')} />
+        <PrimaryButton label="Zmień poziom" variant="secondary" onPress={onChangeLevel} />
+        <PrimaryButton label="Statystyki" variant="ghost" onPress={() => router.push('/stats')} />
         <PrimaryButton label="Wróć" variant="ghost" onPress={onBack} />
       </View>
     </Screen>
@@ -365,55 +438,16 @@ function ResultsView({
 }
 
 const styles = StyleSheet.create({
-  flexCenter: {
-    flex: 1,
-    gap: Spacing.lg,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerText: {
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  sessionTrack: {
-    height: 6,
-    borderRadius: Radius.pill,
-    overflow: 'hidden',
-    flexDirection: 'row',
-  },
-  promptBlock: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  prompt: {
-    fontSize: 40,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
-  hint: {
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  feedback: {
-    fontSize: 16,
-    fontWeight: '700',
-    textAlign: 'center',
-    minHeight: 22,
-  },
-  feedbackSpacer: {
-    minHeight: 22,
-  },
-  choiceGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: Spacing.md,
-  },
+  flexCenter: { flex: 1, gap: Spacing.lg },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  sessionTrack: { height: 6, borderRadius: Radius.pill, overflow: 'hidden', flexDirection: 'row' },
+  introLabel: { marginTop: Spacing.sm },
+  promptBlock: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: Spacing.md },
+  prompt: { fontSize: 38, fontWeight: '800', textAlign: 'center' },
+  hint: { fontSize: 14, textAlign: 'center' },
+  feedback: { fontSize: 16, fontWeight: '700', textAlign: 'center', minHeight: 22 },
+  feedbackSpacer: { minHeight: 22 },
+  choiceGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: Spacing.md },
   choice: {
     width: '47%',
     flexGrow: 1,
@@ -425,9 +459,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     overflow: 'hidden',
   },
-  numericBlock: {
-    gap: Spacing.md,
-  },
+  numericBlock: { gap: Spacing.md },
   numericInput: {
     borderWidth: 1.5,
     borderRadius: Radius.md,
@@ -437,29 +469,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
   },
-  resultTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-  },
-  statRow: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-  },
-  resultLine: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  recordBanner: {
-    borderRadius: Radius.md,
-    padding: Spacing.md,
-  },
-  recordText: {
-    fontSize: 15,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  actions: {
-    gap: Spacing.md,
-    marginTop: Spacing.sm,
-  },
+  statRow: { flexDirection: 'row', gap: Spacing.md },
+  recordBanner: { borderRadius: Radius.md, padding: Spacing.md },
+  recordText: { fontSize: 15, fontWeight: '700', textAlign: 'center' },
+  actions: { gap: Spacing.md, marginTop: Spacing.sm },
 });

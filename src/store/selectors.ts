@@ -2,7 +2,7 @@
  * Pure derivations over the stored results list. Kept framework-free so they
  * are easy to unit-test and reuse on any screen.
  */
-import type { ExerciseResult, ModuleId } from '@/types';
+import type { Difficulty, ExerciseResult, ModuleId } from '@/types';
 
 export function resultsForExercise(
   results: ExerciseResult[],
@@ -11,10 +11,17 @@ export function resultsForExercise(
   return results.filter((r) => r.exercise === exerciseId);
 }
 
-export function bestScore(results: ExerciseResult[], exerciseId: string): number {
+/** Best score for an exercise, optionally restricted to a difficulty level. */
+export function bestScore(
+  results: ExerciseResult[],
+  exerciseId: string,
+  level?: Difficulty,
+): number {
   let best = 0;
   for (const r of results) {
-    if (r.exercise === exerciseId && r.score > best) best = r.score;
+    if (r.exercise === exerciseId && (level == null || r.level === level) && r.score > best) {
+      best = r.score;
+    }
   }
   return best;
 }

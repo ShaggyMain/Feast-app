@@ -6,6 +6,11 @@
 
 export type ModuleId = 'math' | 'spatial' | 'memory' | 'reaction';
 
+/** Difficulty levels offered per exercise (manual now, adaptive in M5). */
+export type Difficulty = 'easy' | 'medium' | 'hard';
+
+export const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard'];
+
 /** How the learner answers a generated item. */
 export type AnswerMode = 'choice' | 'numeric';
 
@@ -15,9 +20,21 @@ export interface Choice {
 }
 
 /**
+ * Optional visual that accompanies a generated item (rendered by `ui/Figure`).
+ * Discriminated by `type` so later modules can add their own visuals.
+ */
+export type FigureSpec = {
+  type: 'heading';
+  /** Current heading, 0..359. */
+  heading: number;
+  /** Signed degrees to turn for the visual cue (right = +, left = −). Optional. */
+  turn?: number;
+};
+
+/**
  * A single procedurally generated task. Generators are pure functions
- * `(seed: number) => GeneratedItem`, so the same seed always yields the same
- * item (deterministic, testable, and replayable).
+ * `(seed, level) => GeneratedItem`, so the same inputs always yield the same
+ * item (deterministic, testable, replayable).
  */
 export interface GeneratedItem {
   prompt: string;
@@ -32,6 +49,8 @@ export interface GeneratedItem {
   answerLabel: string;
   /** Optional method hint surfaced under the prompt. */
   hint?: string;
+  /** Optional visual aid. */
+  figure?: FigureSpec;
 }
 
 /** Result of grading one item during a session. */
@@ -42,8 +61,8 @@ export interface ItemOutcome {
 }
 
 /**
- * Definition of a runnable exercise. Pure: holds metadata plus the generator,
- * with no UI concerns. Consumed by the shared ExerciseRunner shell.
+ * Definition of a runnable exercise. Pure: metadata plus the generator, with no
+ * UI concerns. Consumed by the shared ExerciseRunner shell.
  */
 export interface ExerciseDef {
   id: string;
@@ -54,7 +73,7 @@ export interface ExerciseDef {
   timePerItemSec: number;
   /** Number of items in one session. */
   itemsPerSession: number;
-  generate: (seed: number) => GeneratedItem;
+  generate: (seed: number, level: Difficulty) => GeneratedItem;
 }
 
 /**
@@ -65,6 +84,7 @@ export interface ExerciseResult {
   id: string;
   module: ModuleId;
   exercise: string;
+  level: Difficulty;
   /** ISO timestamp. */
   date: string;
   totalItems: number;

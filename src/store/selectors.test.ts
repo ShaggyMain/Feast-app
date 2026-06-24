@@ -6,6 +6,7 @@ function result(partial: Partial<ExerciseResult>): ExerciseResult {
     id: Math.random().toString(36).slice(2),
     module: 'math',
     exercise: 'demo-arith',
+    level: 'medium',
     date: new Date().toISOString(),
     totalItems: 8,
     correct: 4,
@@ -18,8 +19,8 @@ function result(partial: Partial<ExerciseResult>): ExerciseResult {
 
 // Stored newest-first.
 const results: ExerciseResult[] = [
-  result({ exercise: 'demo-arith', score: 520, accuracy: 0.75, correct: 6, avgResponseMs: 2500 }),
-  result({ exercise: 'demo-arith', score: 300, accuracy: 0.5, correct: 4, avgResponseMs: 4000 }),
+  result({ exercise: 'demo-arith', level: 'hard', score: 520, accuracy: 0.75, correct: 6, avgResponseMs: 2500 }),
+  result({ exercise: 'demo-arith', level: 'easy', score: 300, accuracy: 0.5, correct: 4, avgResponseMs: 4000 }),
   result({ exercise: 'other', module: 'reaction', score: 999, accuracy: 1, correct: 8 }),
 ];
 
@@ -27,6 +28,12 @@ describe('bestScore', () => {
   it('returns the highest score for the exercise (0 when none)', () => {
     expect(bestScore(results, 'demo-arith')).toBe(520);
     expect(bestScore(results, 'missing')).toBe(0);
+  });
+
+  it('can restrict to a difficulty level', () => {
+    expect(bestScore(results, 'demo-arith', 'easy')).toBe(300);
+    expect(bestScore(results, 'demo-arith', 'hard')).toBe(520);
+    expect(bestScore(results, 'demo-arith', 'medium')).toBe(0);
   });
 });
 

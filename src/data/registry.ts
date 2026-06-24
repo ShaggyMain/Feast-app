@@ -7,7 +7,10 @@
  */
 import type { ExerciseDef, ModuleId } from '@/types';
 import { ModuleColors } from '@/constants/theme';
-import { generateDummy } from '@/exercises/dummy/generate';
+import { generateArith } from '@/exercises/math/arith';
+import { generateVst } from '@/exercises/math/vst';
+import { generatePercent } from '@/exercises/math/percent';
+import { generateHeading } from '@/exercises/math/heading';
 
 export interface ModuleMeta {
   id: ModuleId;
@@ -50,13 +53,40 @@ export const MODULES: ModuleMeta[] = [
 
 export const EXERCISES: ExerciseDef[] = [
   {
-    id: 'demo-arith',
+    id: 'math-arith',
     module: 'math',
-    title: 'Demo: liczenie w pamięci',
-    description: 'Ćwiczenie demonstracyjne (M0) — szybkie działania, 4 opcje, na czas.',
+    title: 'Działania w pamięci',
+    description: 'Dodawanie, odejmowanie, mnożenie i dzielenie bez kalkulatora — 4 opcje.',
+    timePerItemSec: 12,
+    itemsPerSession: 10,
+    generate: generateArith,
+  },
+  {
+    id: 'math-vst',
+    module: 'math',
+    title: 'Prędkość · dystans · czas',
+    description: 'Przeliczenia v–s–t pod presją. Wpisz wynik liczbowo.',
+    timePerItemSec: 15,
+    itemsPerSession: 8,
+    generate: generateVst,
+  },
+  {
+    id: 'math-percent',
+    module: 'math',
+    title: 'Procenty i proporcje',
+    description: 'Ile to X% z N oraz ułamki — 4 opcje.',
+    timePerItemSec: 15,
+    itemsPerSession: 8,
+    generate: generatePercent,
+  },
+  {
+    id: 'math-heading',
+    module: 'math',
+    title: 'Kursy i kąty',
+    description: 'Skręty w lewo/prawo i kursy przeciwne na róży 0–360° z kompasem.',
     timePerItemSec: 12,
     itemsPerSession: 8,
-    generate: generateDummy,
+    generate: generateHeading,
   },
 ];
 

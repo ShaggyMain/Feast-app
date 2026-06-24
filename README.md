@@ -9,25 +9,28 @@ Pełna specyfikacja zadań, architektury i kamieni milowych: [`SPEC.md`](./SPEC.
 
 ---
 
-## Stan: kamień milowy **M0 — szkielet** ✅
+## Stan: **M0 — szkielet** ✅ · **M1 — moduł matematyczny** ✅
 
-Zrealizowane w M0:
+**M0 (szkielet):** Expo (SDK 56) + TypeScript, `expo-router`, motyw jasny/ciemny, ekran Home,
+warstwa AsyncStorage (`ExerciseResult`) przez `zustand` + `persist`, wspólny `ExerciseRunner`
+(licznik czasu, multiple-choice + wpis liczbowy, feedback kolor/haptyka bez kary za błąd,
+scoring trafność + tempo, ekran wyniku).
 
-- Projekt **Expo (SDK 56) + TypeScript** z nawigacją **expo-router** i motywem **jasny/ciemny**
-  (automatycznie wg ustawień systemu).
-- **Ekran główny (Home)** z kafelkami 4 modułów, skrótem do statystyk i przyciskiem
-  „Trening demo".
-- Warstwa zapisu w **AsyncStorage** (model `ExerciseResult`) przez `zustand` + `persist`
-  (offline-first).
-- Wspólny komponent **`ExerciseRunner`**: licznik czasu na pytanie, prezentacja zadania,
-  obsługa odpowiedzi **multiple-choice** i **wpisu liczbowego**, feedback (kolor + haptyka,
-  bez kary za błąd), scoring (trafność + tempo) oraz **ekran wyniku** z porównaniem do rekordu.
-- Jedno **dummy-ćwiczenie** (`demo-arith`) spinające pełny przepływ:
-  **Home → ćwiczenie → wynik → statystyki**.
-- Generator zadań jako **czysta funkcja** (`src/exercises/dummy/generate.ts`),
-  deterministyczna przy seedzie, z **testami** (m.in. „poprawna odpowiedź zawsze dokładnie jedna").
+**M1 (Moduł 1 — Matematyka pod czas):** cztery ćwiczenia jako czyste, deterministyczne
+generatory z testami:
 
-Kolejne moduły (matematyka, reakcja, przestrzenne, pamięć/radar) dodajemy w M1–M5 — patrz `SPEC.md`.
+- **1.1 Działania w pamięci** (`math-arith`) — +, −, ×, ÷; poziomy trudności, na trudnym łańcuchy.
+- **1.2 Prędkość · dystans · czas** (`math-vst`) — przeliczenia v–s–t, **wpis liczbowy**,
+  prędkości dające całkowite km/min.
+- **1.3 Procenty i proporcje** (`math-percent`) — X% z N oraz ułamki, zawsze całkowity wynik.
+- **1.4 Kursy i kąty** (`math-heading`) — skręty L/P i kursy przeciwne na róży 0–360°,
+  z **kompasem (SVG)**; dystraktor „zły kierunek".
+
+Dodatkowo w M1: **poziomy trudności** (Łatwy/Średni/Trudny) z ekranem startowym ćwiczenia,
+**ekran Ustawień** (domyślny poziom, haptyka), odświeżony **wygląd** (typografia, kafelki
+z akcentem modułu, segmentowany wybór poziomu) i rekordy liczone per poziom.
+
+Kolejne moduły (reakcja + serie, przestrzenne, pamięć/radar) dodajemy w M2–M5 — patrz `SPEC.md`.
 
 ---
 
@@ -114,27 +117,35 @@ Konfiguracja profili budowania jest w [`eas.json`](./eas.json) (`preview` = APK 
 src/
   app/                      # ekrany (expo-router)
     _layout.tsx             # Stack + motyw nawigacji (jasny/ciemny)
-    index.tsx               # Home: kafelki modułów + skrót do statystyk
+    index.tsx               # Home: hero, szybki trening, kafelki modułów
     module/[id].tsx         # lista ćwiczeń modułu + najlepsze wyniki
     exercise/[id].tsx       # uruchamia ExerciseRunner dla danego ćwiczenia
     stats.tsx               # statystyki i postępy
+    settings.tsx            # domyślny poziom, haptyka
   exercises/
-    dummy/generate.ts       # czysty generator (deterministyczny przy seedzie) + test
+    _shared/choices.ts      # budowa opcji MC (dokładnie jedna poprawna)
+    math/arith.ts           # 1.1 działania w pamięci
+    math/vst.ts             # 1.2 prędkość–dystans–czas (wpis liczbowy)
+    math/percent.ts         # 1.3 procenty i proporcje
+    math/heading.ts         # 1.4 kursy i kąty (+ kompas)
+    math/generators.test.ts # testy 4 generatorów (×3 poziomy)
   runner/
-    ExerciseRunner.tsx      # wspólny shell: timer, input, feedback, scoring, wynik
+    ExerciseRunner.tsx      # wspólny shell: intro+poziom, timer, input, wynik
     scoring.ts              # czysta logika punktacji (+ test)
   core/
     rng.ts                  # seedowany RNG (mulberry32) + helpery (+ test)
     id.ts                   # generator id rekordów
   store/
     results.ts              # zustand + persist (AsyncStorage)
-    selectors.ts            # czyste derywacje (rekord, statystyki) (+ test)
+    settings.ts             # preferencje (poziom, haptyka)
+    selectors.ts            # czyste derywacje (rekord per poziom, statystyki) (+ test)
   data/
     registry.ts             # rejestr modułów i ćwiczeń (metadane + generatory)
-  ui/                       # Screen, Card, PrimaryButton, TimerBar, Stat
+  ui/                       # Screen, Card, PrimaryButton, TimerBar, Stat,
+                            # Text, SegmentedControl, Figure (kompas SVG)
   constants/theme.ts        # kolory (jasny/ciemny), odstępy, typografia
   hooks/                    # use-color-scheme, use-theme
-  types.ts                  # wspólne typy (ExerciseResult, GeneratedItem, ...)
+  types.ts                  # wspólne typy (ExerciseResult, GeneratedItem, Difficulty, ...)
 ```
 
 ### Zasady jakości (ze `SPEC.md`)

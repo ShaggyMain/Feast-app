@@ -1,4 +1,4 @@
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 
 import { Spacing } from '@/constants/theme';
 import { EXERCISES, getModule } from '@/data/registry';
@@ -9,9 +9,9 @@ import { Card } from '@/ui/Card';
 import { PrimaryButton } from '@/ui/PrimaryButton';
 import { Screen } from '@/ui/Screen';
 import { Stat } from '@/ui/Stat';
+import { AppText } from '@/ui/Text';
 
 export default function StatsScreen() {
-  const theme = useTheme();
   const results = useResultsStore((s) => s.results);
   const clearAll = useResultsStore((s) => s.clearAll);
   const stats = overallStats(results);
@@ -38,22 +38,25 @@ export default function StatsScreen() {
 
       {results.length === 0 ? (
         <Card>
-          <Text style={[styles.emptyTitle, { color: theme.text }]}>Brak wyników</Text>
-          <Text style={[styles.emptyBody, { color: theme.textSecondary }]}>
+          <AppText variant="subtitle">Brak wyników</AppText>
+          <AppText variant="bodyMuted">
             Ukończ sesję, aby zobaczyć tu trafność, tempo i najlepsze wyniki.
-          </Text>
+          </AppText>
         </Card>
       ) : (
         <>
-          <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>WG ĆWICZENIA</Text>
+          <AppText variant="label" style={styles.section}>
+            WG ĆWICZENIA
+          </AppText>
           {played.map(({ exercise, stats: exStats }) => {
             const moduleMeta = getModule(exercise.module);
             return (
               <Card key={exercise.id} accent={moduleMeta?.color}>
-                <Text style={[styles.exTitle, { color: theme.text }]}>{exercise.title}</Text>
+                <AppText variant="subtitle">{exercise.title}</AppText>
                 <View style={styles.exStatRow}>
-                  <Stat label="Rekord" value={String(exStats!.bestScore)} accent={theme.tint} />
+                  <Stat label="Rekord" value={String(exStats!.bestScore)} accent={moduleMeta?.color} />
                   <Stat label="Śr. traf." value={`${Math.round(exStats!.avgAccuracy * 100)}%`} />
+                  <Stat label="Śr. czas" value={`${(exStats!.avgResponseMs / 1000).toFixed(1)}s`} />
                   <Stat label="Prób" value={String(exStats!.attempts)} />
                 </View>
               </Card>
@@ -67,31 +70,7 @@ export default function StatsScreen() {
 }
 
 const styles = StyleSheet.create({
-  statRow: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-  },
-  sectionLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 1,
-    marginTop: Spacing.sm,
-  },
-  emptyTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-  },
-  emptyBody: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  exTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    marginBottom: Spacing.sm,
-  },
-  exStatRow: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-  },
+  statRow: { flexDirection: 'row', gap: Spacing.md },
+  section: { marginTop: Spacing.sm },
+  exStatRow: { flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.sm },
 });

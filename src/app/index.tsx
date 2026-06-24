@@ -1,8 +1,8 @@
 import { useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { Spacing } from '@/constants/theme';
-import { MODULES } from '@/data/registry';
+import { Radius, Spacing } from '@/constants/theme';
+import { EXERCISES, MODULES, exercisesForModule } from '@/data/registry';
 import { useTheme } from '@/hooks/use-theme';
 import { useResultsStore } from '@/store/results';
 import { overallStats } from '@/store/selectors';
@@ -10,6 +10,7 @@ import { Card } from '@/ui/Card';
 import { PrimaryButton } from '@/ui/PrimaryButton';
 import { Screen } from '@/ui/Screen';
 import { Stat } from '@/ui/Stat';
+import { AppText } from '@/ui/Text';
 
 export default function Home() {
   const theme = useTheme();
@@ -17,14 +18,19 @@ export default function Home() {
   const results = useResultsStore((s) => s.results);
   const stats = overallStats(results);
 
+  const quickStart = () => {
+    const mathExercises = EXERCISES.filter((e) => e.module === 'math');
+    const chosen = mathExercises[Math.floor(Math.random() * mathExercises.length)];
+    if (chosen) router.push(`/exercise/${chosen.id}`);
+  };
+
   return (
     <Screen>
-      <View style={styles.intro}>
-        <Text style={[styles.title, { color: theme.text }]}>Trenuj jak kontroler</Text>
-        <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-          Krótkie ćwiczenia na czas — liczy się szybkość i dokładność. Bez kary za błędy:
-          lepiej zgadnąć niż zostawić puste.
-        </Text>
+      <View style={styles.hero}>
+        <AppText variant="hero">Trenuj jak kontroler</AppText>
+        <AppText variant="bodyMuted">
+          Krótkie ćwiczenia na czas — liczy się szybkość i dokładność. Bez kary za błędy.
+        </AppText>
       </View>
 
       <View style={styles.statRow}>
@@ -33,71 +39,65 @@ export default function Home() {
         <Stat label="Pytania" value={String(stats.totalItems)} />
       </View>
 
-      <PrimaryButton label="▶  Trening demo" onPress={() => router.push('/exercise/demo-arith')} />
-
-      <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>MODUŁY</Text>
-
-      {MODULES.map((module) => (
-        <Card key={module.id} accent={module.color} onPress={() => router.push(`/module/${module.id}`)}>
-          <View style={styles.tileRow}>
-            <Text style={styles.emoji}>{module.emoji}</Text>
-            <View style={styles.tileText}>
-              <Text style={[styles.tileTitle, { color: theme.text }]}>{module.title}</Text>
-              <Text style={[styles.tileSub, { color: theme.textSecondary }]}>{module.subtitle}</Text>
-            </View>
+      <Card accent={theme.tint} onPress={quickStart}>
+        <View style={styles.ctaRow}>
+          <View style={styles.flex}>
+            <AppText variant="subtitle">Szybki trening</AppText>
+            <AppText variant="caption">Losowe ćwiczenie z matematyki</AppText>
           </View>
-        </Card>
-      ))}
+          <AppText variant="hero" color={theme.tint}>
+            ▶
+          </AppText>
+        </View>
+      </Card>
 
-      <PrimaryButton
-        label="Statystyki i postępy"
-        variant="secondary"
-        onPress={() => router.push('/stats')}
-      />
+      <AppText variant="label" style={styles.section}>
+        MODUŁY
+      </AppText>
+
+      {MODULES.map((module) => {
+        const count = exercisesForModule(module.id).length;
+        return (
+          <Card key={module.id} accent={module.color} onPress={() => router.push(`/module/${module.id}`)}>
+            <View style={styles.tileRow}>
+              <View style={[styles.badge, { backgroundColor: module.color + '22' }]}>
+                <Text style={styles.emoji}>{module.emoji}</Text>
+              </View>
+              <View style={styles.tileText}>
+                <AppText variant="subtitle">{module.title}</AppText>
+                <AppText variant="caption">{module.subtitle}</AppText>
+              </View>
+              <AppText variant="caption" color={module.color}>
+                {count > 0 ? `${count} ćw.` : 'Wkrótce'}
+              </AppText>
+            </View>
+          </Card>
+        );
+      })}
+
+      <View style={styles.actions}>
+        <PrimaryButton label="Statystyki i postępy" variant="secondary" onPress={() => router.push('/stats')} />
+        <PrimaryButton label="Ustawienia" variant="ghost" onPress={() => router.push('/settings')} />
+      </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  intro: {
-    gap: Spacing.sm,
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: '800',
-  },
-  subtitle: {
-    fontSize: 15,
-    lineHeight: 21,
-  },
-  statRow: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-  },
-  sectionLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 1,
-    marginTop: Spacing.sm,
-  },
-  tileRow: {
-    flexDirection: 'row',
+  hero: { gap: Spacing.xs },
+  flex: { flex: 1 },
+  statRow: { flexDirection: 'row', gap: Spacing.md },
+  ctaRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
+  section: { marginTop: Spacing.sm },
+  tileRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
+  badge: {
+    width: 46,
+    height: 46,
+    borderRadius: Radius.pill,
     alignItems: 'center',
-    gap: Spacing.md,
+    justifyContent: 'center',
   },
-  emoji: {
-    fontSize: 30,
-  },
-  tileText: {
-    flex: 1,
-    gap: 2,
-  },
-  tileTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-  },
-  tileSub: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
+  emoji: { fontSize: 24 },
+  tileText: { flex: 1, gap: 2 },
+  actions: { gap: Spacing.md, marginTop: Spacing.sm },
 });
