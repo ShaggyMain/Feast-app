@@ -77,7 +77,15 @@ Arytmetyczne / Geometryczne / Kwadraty), analogicznie do trybu jednego działani
   potwierdza „dokładnie jedna poprawna".
 - Runner obsługuje teraz **wizualne prompty i wizualne opcje** (siatka/kostki/kształty w SVG).
 
-Moduł pamięć/radar (M4) oraz statystyki/tryb egzaminacyjny (M5) — patrz `SPEC.md`.
+**M4 (Moduł 3 — Pamięć), część 1:**
+- **3.1 Zapamiętywanie** (`mem-gauges`) — zapamiętaj wartości wskaźników, maska, potem recall
+  jednego z nich; lekka adaptacja liczby wskaźników w trakcie sesji.
+- **3.2 N-back** (`mem-nback`) — strumień liter, reaguj gdy bieżąca = sprzed N (1/2/3-back);
+  liczone trafienia / pominięcia / fałszywe alarmy. Czyste budowanie sekwencji (kontrolowany
+  odsetek trafień) z testami; wspólny shell `CustomExercise` dla ćwiczeń interaktywnych.
+
+Pozostaje **3.3 Multipass** i flagowy **3.4 Radar/DART** (real-time), oraz **M5**
+(wykresy postępów, tryb egzaminacyjny). Patrz `SPEC.md`.
 
 ---
 

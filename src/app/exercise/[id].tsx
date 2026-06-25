@@ -3,6 +3,8 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import { getExercise } from '@/data/registry';
 import { ExerciseRunner } from '@/runner/ExerciseRunner';
 import { ReactionExercise } from '@/exercises/reaction/ReactionExercise';
+import { MemoryExercise } from '@/exercises/memory/MemoryExercise';
+import { NBackExercise } from '@/exercises/memory/NBackExercise';
 
 export default function ExerciseScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -10,14 +12,24 @@ export default function ExerciseScreen() {
   const exercise = getExercise(exerciseId);
   const runner = exercise?.runner ?? 'standard';
 
+  function renderRunner() {
+    switch (runner) {
+      case 'reaction-simple':
+      case 'reaction-gonogo':
+        return <ReactionExercise exerciseId={exerciseId} kind={runner} />;
+      case 'memory':
+        return <MemoryExercise exerciseId={exerciseId} />;
+      case 'nback':
+        return <NBackExercise exerciseId={exerciseId} />;
+      default:
+        return <ExerciseRunner exerciseId={exerciseId} />;
+    }
+  }
+
   return (
     <>
       <Stack.Screen options={{ title: exercise?.title ?? 'Ćwiczenie' }} />
-      {runner === 'reaction-simple' || runner === 'reaction-gonogo' ? (
-        <ReactionExercise exerciseId={exerciseId} kind={runner} />
-      ) : (
-        <ExerciseRunner exerciseId={exerciseId} />
-      )}
+      {renderRunner()}
     </>
   );
 }
