@@ -15,14 +15,17 @@ const SPEEDS: Record<Difficulty, number[]> = {
 
 type Ask = 'distance' | 'time' | 'speed';
 
-export function generateVst(seed: number, level: Difficulty): GeneratedItem {
+const VARIANT: Record<string, Ask> = { distance: 'distance', time: 'time', speed: 'speed' };
+
+export function generateVst(seed: number, level: Difficulty, variant?: string): GeneratedItem {
   const rng = mulberry32(seed);
   const speed = pick(rng, SPEEDS[level]);
   const kmPerMin = speed / 60;
   const minutes = randInt(rng, level === 'easy' ? 2 : 3, level === 'hard' ? 18 : 12);
   const distance = kmPerMin * minutes;
 
-  const ask: Ask = pick(rng, ['distance', 'time', 'speed'] as const);
+  const forced = variant ? VARIANT[variant] : undefined;
+  const ask: Ask = forced ?? pick(rng, ['distance', 'time', 'speed'] as const);
 
   let prompt: string;
   let answer: number;

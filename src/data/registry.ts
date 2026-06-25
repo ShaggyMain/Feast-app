@@ -84,6 +84,16 @@ export const EXERCISES: ExerciseDef[] = [
     description: 'Przeliczenia v–s–t pod presją. Wpisz wynik liczbowo.',
     timePerItemSec: 15,
     itemsPerSession: 8,
+    variant: {
+      label: 'SZUKANE',
+      default: 'all',
+      options: [
+        { value: 'all', label: 'Wszystkie' },
+        { value: 'distance', label: 'Dystans' },
+        { value: 'time', label: 'Czas' },
+        { value: 'speed', label: 'Prędk.' },
+      ],
+    },
     generate: generateVst,
   },
   {
@@ -93,6 +103,15 @@ export const EXERCISES: ExerciseDef[] = [
     description: 'Ile to X% z N oraz ułamki — 4 opcje.',
     timePerItemSec: 15,
     itemsPerSession: 8,
+    variant: {
+      label: 'TYP',
+      default: 'all',
+      options: [
+        { value: 'all', label: 'Wszystkie' },
+        { value: 'percent', label: 'Procent' },
+        { value: 'fraction', label: 'Ułamek' },
+      ],
+    },
     generate: generatePercent,
   },
   {
@@ -102,6 +121,15 @@ export const EXERCISES: ExerciseDef[] = [
     description: 'Skręty w lewo/prawo i kursy przeciwne na róży 0–360° z kompasem.',
     timePerItemSec: 12,
     itemsPerSession: 8,
+    variant: {
+      label: 'TYP',
+      default: 'all',
+      options: [
+        { value: 'all', label: 'Wszystkie' },
+        { value: 'turn', label: 'Skręt' },
+        { value: 'reciprocal', label: 'Przeciwny' },
+      ],
+    },
     generate: generateHeading,
   },
   {

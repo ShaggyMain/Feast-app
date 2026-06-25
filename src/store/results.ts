@@ -12,6 +12,8 @@ interface ResultsState {
   results: ExerciseResult[];
   hasHydrated: boolean;
   addResult: (result: ExerciseResult) => void;
+  /** Merge imported results by id (skipping duplicates); returns how many were added. */
+  importResults: (incoming: ExerciseResult[]) => number;
   clearAll: () => void;
   setHasHydrated: (value: boolean) => void;
 }
@@ -25,6 +27,17 @@ export const useResultsStore = create<ResultsState>()(
       hasHydrated: false,
       addResult: (result) =>
         set((state) => ({ results: [result, ...state.results].slice(0, MAX_RESULTS) })),
+      importResults: (incoming) => {
+        let added = 0;
+        set((state) => {
+          const seen = new Set(state.results.map((r) => r.id));
+          const fresh = incoming.filter((r) => !seen.has(r.id));
+          added = fresh.length;
+          const merged = [...fresh, ...state.results].sort((a, b) => (a.date < b.date ? 1 : -1));
+          return { results: merged.slice(0, MAX_RESULTS) };
+        });
+        return added;
+      },
       clearAll: () => set({ results: [] }),
       setHasHydrated: (value) => set({ hasHydrated: value }),
     }),

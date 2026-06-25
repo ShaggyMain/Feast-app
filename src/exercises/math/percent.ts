@@ -41,10 +41,11 @@ const N_RANGE: Record<Difficulty, [number, number]> = {
   hard: [120, 960],
 };
 
-export function generatePercent(seed: number, level: Difficulty): GeneratedItem {
+export function generatePercent(seed: number, level: Difficulty, variant?: string): GeneratedItem {
   const rng = mulberry32(seed);
   const [nLo, nHi] = N_RANGE[level];
-  const usePercent = rng() < 0.6;
+  const forced = variant === 'percent' ? true : variant === 'fraction' ? false : undefined;
+  const usePercent = forced ?? rng() < 0.6;
 
   let prompt: string;
   let result: number;

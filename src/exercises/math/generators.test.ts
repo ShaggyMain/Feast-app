@@ -142,3 +142,31 @@ describe('generateHeading (1.4)', () => {
     }
   });
 });
+
+describe('math generator variants', () => {
+  it('vst honors the asked quantity', () => {
+    for (const [v, unit] of [['distance', 'km'], ['time', 'min'], ['speed', 'km/h']] as const) {
+      for (const level of LEVELS) {
+        for (let seed = 0; seed < 60; seed++) {
+          const item = generateVst(seed, level, v);
+          expect(item.category).toBe(v);
+          expect(item.answerLabel.endsWith(unit)).toBe(true);
+        }
+      }
+    }
+  });
+
+  it('percent honors percent vs fraction', () => {
+    for (let seed = 0; seed < 80; seed++) {
+      expect(generatePercent(seed, 'medium', 'percent').prompt).toMatch(/% z /);
+      expect(generatePercent(seed, 'medium', 'fraction').prompt).toMatch(/\/\d+ z /);
+    }
+  });
+
+  it('heading honors turn vs reciprocal', () => {
+    for (let seed = 0; seed < 80; seed++) {
+      expect(generateHeading(seed, 'medium', 'turn').category).toBe('turn');
+      expect(generateHeading(seed, 'medium', 'reciprocal').category).toBe('reciprocal');
+    }
+  });
+});

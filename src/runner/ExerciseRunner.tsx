@@ -20,7 +20,7 @@ import { getExercise, getModule } from '@/data/registry';
 import { gradeItem, summarize } from '@/runner/scoring';
 import { buildSession } from '@/runner/session';
 import { useResultsStore } from '@/store/results';
-import { pickInitialLevel, useSettingsStore } from '@/store/settings';
+import { pickInitialLevel, sessionMultiplier, useSettingsStore } from '@/store/settings';
 import { bestScore } from '@/store/selectors';
 import { makeId } from '@/core/id';
 import { playCue } from '@/core/sound';
@@ -60,6 +60,7 @@ export function ExerciseRunner({ exerciseId }: { exerciseId: string }) {
   );
   const addResult = useResultsStore((s) => s.addResult);
   const results = useResultsStore((s) => s.results);
+  const sessionLength = useSettingsStore((s) => s.sessionLength);
 
   const [level, setLevel] = useState<Difficulty>(() => pickInitialLevel(exerciseId));
   const [variant, setVariant] = useState<string | undefined>(() => def?.variant?.default);
@@ -69,15 +70,15 @@ export function ExerciseRunner({ exerciseId }: { exerciseId: string }) {
   const [savedResult, setSavedResult] = useState<ExerciseResult | null>(null);
   const prevBestRef = useRef(0);
 
-  const total = def ? def.itemsPerSession : 0;
+  const total = def ? Math.max(4, Math.round(def.itemsPerSession * sessionMultiplier(sessionLength))) : 0;
   const timeLimitMs = def ? def.timePerItemSec * 1000 : 0;
   const index = outcomes.length;
 
   // Pre-build the whole session so prompts are de-duplicated and item types are
   // balanced (variety within a session); regenerated each run via baseSeed.
   const sessionItems = useMemo(
-    () => (def && phase === 'playing' ? buildSession(def, baseSeed, level, variant) : []),
-    [def, phase, baseSeed, level, variant],
+    () => (def && phase === 'playing' ? buildSession(def, baseSeed, level, variant, total) : []),
+    [def, phase, baseSeed, level, variant, total],
   );
   const currentItem = phase === 'playing' && index < sessionItems.length ? sessionItems[index] : null;
 

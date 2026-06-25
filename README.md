@@ -103,8 +103,16 @@ nieobsłużone. Czysta logika ruchu/separacji w `radar/sim.ts` z testami.
 - **Adaptacyjna trudność** (opcja w Ustawieniach) — `suggestLevel` proponuje poziom startowy
   wg ostatnich wyników (po 2 mocnych sesjach wyżej, po słabej niżej). Czysta logika z testami.
 
-Wszystkie ćwiczenia ze SPEC są zaimplementowane. Opcjonalnie zostaje **Radar Etap 2**
-(komendy prędkości/kursu, zmienne reguły) i **M6** (wydanie przez EAS). Patrz `SPEC.md`.
+Wszystkie ćwiczenia ze SPEC są zaimplementowane.
+
+**Dodatki jakości życia:**
+- **Warianty** dla v–s–t (dystans/czas/prędkość), procentów (procent/ułamek) i kursów
+  (skręt/przeciwny) — obok wcześniejszych (działania, serie, orientacja, współrzędne).
+- **Długość sesji** (Krótka/Normalna/Długa) w Ustawieniach — skaluje liczbę pytań.
+- **Eksport/Import wyników** (ekran „Dane"): kopia zapasowa jako JSON (udostępnianie) i scalanie
+  importu (duplikaty pomijane). Czysty (de)serializer `store/io.ts` z testami.
+
+Opcjonalnie zostaje **Radar Etap 2** i **M6** (wydanie przez EAS). Patrz `SPEC.md`.
 
 ---
 

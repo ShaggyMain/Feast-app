@@ -23,10 +23,11 @@ function pickHeading(rng: Rng, stepMult: number): number {
   return randInt(rng, 0, Math.floor(359 / stepMult)) * stepMult;
 }
 
-export function generateHeading(seed: number, level: Difficulty): GeneratedItem {
+export function generateHeading(seed: number, level: Difficulty, variant?: string): GeneratedItem {
   const rng = mulberry32(seed);
   const headingStep = level === 'hard' ? 5 : 10;
-  const isReciprocal = rng() < 0.3;
+  const forced = variant === 'reciprocal' ? true : variant === 'turn' ? false : undefined;
+  const isReciprocal = forced ?? rng() < 0.3;
 
   let prompt: string;
   let answer: number;

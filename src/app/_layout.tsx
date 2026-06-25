@@ -47,6 +47,7 @@ export default function RootLayout() {
           <Stack.Screen name="progress" options={{ title: 'Postępy' }} />
           <Stack.Screen name="exam" options={{ title: 'Tryb egzaminacyjny' }} />
           <Stack.Screen name="settings" options={{ title: 'Ustawienia' }} />
+          <Stack.Screen name="data" options={{ title: 'Dane' }} />
         </Stack>
       </ThemeProvider>
     </SafeAreaProvider>
