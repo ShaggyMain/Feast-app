@@ -247,14 +247,14 @@ function IntroView({
 
 // ---------------------------------------------------------------------------
 
-interface PlayItemProps {
+export interface PlayItemProps {
   item: GeneratedItem;
   timeLimitMs: number;
   accent: string;
   onComplete: (outcome: ItemOutcome) => void;
 }
 
-function PlayItem({ item, timeLimitMs, accent, onComplete }: PlayItemProps) {
+export function PlayItem({ item, timeLimitMs, accent, onComplete }: PlayItemProps) {
   const theme = useTheme();
   const hapticsOn = useSettingsStore((s) => s.haptics);
   const soundOn = useSettingsStore((s) => s.sound);

@@ -60,6 +60,18 @@ export default function Home() {
         </View>
       </Card>
 
+      <Card accent={theme.warning} onPress={() => router.push('/exam')}>
+        <View style={styles.ctaRow}>
+          <View style={styles.flex}>
+            <AppText variant="subtitle">Tryb egzaminacyjny</AppText>
+            <AppText variant="caption">20 pytań z różnych modułów, bez przerw</AppText>
+          </View>
+          <AppText variant="hero" color={theme.warning}>
+            ★
+          </AppText>
+        </View>
+      </Card>
+
       <AppText variant="label" style={styles.section}>
         MODUŁY
       </AppText>
@@ -85,7 +97,8 @@ export default function Home() {
       })}
 
       <View style={styles.actions}>
-        <PrimaryButton label="Statystyki i postępy" variant="secondary" onPress={() => router.push('/stats')} />
+        <PrimaryButton label="Postępy (wykresy)" variant="secondary" onPress={() => router.push('/progress')} />
+        <PrimaryButton label="Statystyki" variant="ghost" onPress={() => router.push('/stats')} />
         <PrimaryButton label="Jak działa FEAST" variant="ghost" onPress={() => router.push('/onboarding')} />
         <PrimaryButton label="Ustawienia" variant="ghost" onPress={() => router.push('/settings')} />
       </View>

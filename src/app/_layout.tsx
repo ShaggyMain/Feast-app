@@ -44,6 +44,8 @@ export default function RootLayout() {
           <Stack.Screen name="module/[id]" options={{ title: 'Moduł' }} />
           <Stack.Screen name="exercise/[id]" options={{ title: 'Ćwiczenie' }} />
           <Stack.Screen name="stats" options={{ title: 'Statystyki' }} />
+          <Stack.Screen name="progress" options={{ title: 'Postępy' }} />
+          <Stack.Screen name="exam" options={{ title: 'Tryb egzaminacyjny' }} />
           <Stack.Screen name="settings" options={{ title: 'Ustawienia' }} />
         </Stack>
       </ThemeProvider>

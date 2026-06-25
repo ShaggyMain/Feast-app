@@ -67,7 +67,9 @@ export function overallStats(results: ExerciseResult[]): OverallStats {
   const totalItems = results.reduce((s, r) => s + r.totalItems, 0);
   const totalCorrect = results.reduce((s, r) => s + r.correct, 0);
   const byModule: Record<ModuleId, number> = { math: 0, spatial: 0, memory: 0, reaction: 0 };
-  for (const r of results) byModule[r.module] += 1;
+  for (const r of results) {
+    if (r.exercise !== 'exam') byModule[r.module] += 1;
+  }
   return {
     totalSessions: results.length,
     totalItems,
@@ -75,4 +77,50 @@ export function overallStats(results: ExerciseResult[]): OverallStats {
     avgAccuracy: totalItems ? totalCorrect / totalItems : 0,
     byModule,
   };
+}
+
+export interface SeriesOptions {
+  exercise?: string;
+  module?: ModuleId;
+  limit?: number;
+}
+
+function filterResults(results: ExerciseResult[], opts: SeriesOptions): ExerciseResult[] {
+  return results.filter(
+    (r) =>
+      (opts.exercise == null || r.exercise === opts.exercise) &&
+      (opts.module == null || r.module === opts.module),
+  );
+}
+
+/** Chronological (oldest→newest) values of a field for the last `limit` results. */
+export function series(
+  results: ExerciseResult[],
+  field: 'score' | 'accuracy' | 'avgResponseMs',
+  opts: SeriesOptions = {},
+): number[] {
+  const limit = opts.limit ?? 20;
+  // results are stored newest-first; take the most recent `limit`, then reverse.
+  return filterResults(results, opts)
+    .slice(0, limit)
+    .reverse()
+    .map((r) => r[field]);
+}
+
+/** Consecutive calendar days (UTC) up to today with at least one session. */
+export function dailyStreak(results: ExerciseResult[], now: Date = new Date()): number {
+  if (results.length === 0) return 0;
+  const days = new Set(results.map((r) => r.date.slice(0, 10)));
+  const key = (d: Date) => d.toISOString().slice(0, 10);
+  const cursor = new Date(now);
+  if (!days.has(key(cursor))) {
+    cursor.setUTCDate(cursor.getUTCDate() - 1);
+    if (!days.has(key(cursor))) return 0; // nothing today or yesterday
+  }
+  let streak = 0;
+  while (days.has(key(cursor))) {
+    streak += 1;
+    cursor.setUTCDate(cursor.getUTCDate() - 1);
+  }
+  return streak;
 }

@@ -1,5 +1,5 @@
 import type { ExerciseResult } from '../types';
-import { bestScore, exerciseStats, overallStats } from './selectors';
+import { bestScore, dailyStreak, exerciseStats, overallStats, series } from './selectors';
 
 function result(partial: Partial<ExerciseResult>): ExerciseResult {
   return {
@@ -63,5 +63,43 @@ describe('overallStats', () => {
     expect(s.byModule.math).toBe(2);
     expect(s.byModule.reaction).toBe(1);
     expect(s.byModule.spatial).toBe(0);
+  });
+});
+
+describe('series', () => {
+  // newest-first input
+  const rs: ExerciseResult[] = [
+    result({ exercise: 'a', score: 50, date: '2026-03-03T10:00:00.000Z' }),
+    result({ exercise: 'a', score: 40, date: '2026-03-02T10:00:00.000Z' }),
+    result({ exercise: 'b', score: 99, date: '2026-03-02T09:00:00.000Z' }),
+    result({ exercise: 'a', score: 30, date: '2026-03-01T10:00:00.000Z' }),
+  ];
+
+  it('returns chronological (oldest→newest) values, filtered and limited', () => {
+    expect(series(rs, 'score', { exercise: 'a' })).toEqual([30, 40, 50]);
+    expect(series(rs, 'score', { exercise: 'a', limit: 2 })).toEqual([40, 50]);
+    expect(series(rs, 'score', { exercise: 'missing' })).toEqual([]);
+  });
+});
+
+describe('dailyStreak', () => {
+  const mk = (iso: string) => result({ date: iso });
+
+  it('counts consecutive UTC days up to today', () => {
+    const now = new Date('2026-03-03T12:00:00.000Z');
+    const rs = [mk('2026-03-03T08:00:00Z'), mk('2026-03-02T08:00:00Z'), mk('2026-03-01T08:00:00Z')];
+    expect(dailyStreak(rs, now)).toBe(3);
+  });
+
+  it('breaks on a gap and allows "yesterday" when nothing today', () => {
+    const now = new Date('2026-03-05T12:00:00.000Z');
+    const rs = [mk('2026-03-03T08:00:00Z'), mk('2026-03-02T08:00:00Z')];
+    expect(dailyStreak(rs, now)).toBe(0); // last session was 2 days ago
+    const now2 = new Date('2026-03-04T12:00:00.000Z');
+    expect(dailyStreak(rs, now2)).toBe(2); // yesterday + the day before
+  });
+
+  it('is 0 with no results', () => {
+    expect(dailyStreak([], new Date())).toBe(0);
   });
 });

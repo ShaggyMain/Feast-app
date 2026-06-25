@@ -89,7 +89,15 @@ Arytmetyczne / Geometryczne / Kwadraty), analogicznie do trybu jednego działani
 trzeba utrzymywać separację (zbyt bliskie = konflikt). Wynik: lądowania − konflikty −
 nieobsłużone. Czysta logika ruchu/separacji w `radar/sim.ts` z testami.
 
-Pozostaje **3.3 Multipass** oraz **M5** (wykresy postępów, tryb egzaminacyjny). Patrz `SPEC.md`.
+**M5 (statystyki + tryb egzaminacyjny):**
+- **Ekran Postępy** (`progress.tsx`) — wykresy SVG (`ui/Chart`) trendu wyniku i trafności,
+  filtr po module, **passa dni** (streak), rekord. Czyste selektory (`series`, `dailyStreak`)
+  z testami.
+- **Tryb egzaminacyjny** (`exam.tsx`, `ExamRunner`) — 20 pytań mieszanych z modułów, bez przerw,
+  na czas, z podsumowaniem wg modułu i osobnym rekordem. `PlayItem` wydzielony do reużycia,
+  builder pozycji (`exam.ts`) z testami.
+
+Pozostaje **3.3 Multipass** oraz **Radar Etap 2** (rozbudowa). Patrz `SPEC.md`.
 
 ---
 
