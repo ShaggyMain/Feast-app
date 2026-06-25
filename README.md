@@ -58,7 +58,16 @@ krótsze okna/ISI i więcej prób, w czasie reakcji krótszy deadline (zbyt woln
 w seriach **dłuższe ciągi** na wyższym poziomie. Serie mają też **wybór typu** (Wszystkie /
 Arytmetyczne / Geometryczne / Kwadraty), analogicznie do trybu jednego działania w 1.1.
 
-Kolejne moduły (przestrzenne, pamięć/radar) dodajemy w M3–M5 — patrz `SPEC.md`.
+**M3 (Moduł 2 — Wyobraźnia przestrzenna), część 1:**
+- **2.3 Orientacja i kompas** (`spatial-orient`) — kierunek z A do B (8 kierunków) oraz obroty
+  kierunku patrzenia; figura: siatka z punktami / róża kompasowa.
+- **2.4 Współrzędne (radar)** (`spatial-coords`) — oszacuj kurs (0–360°) i odległość między
+  samolotem a celem na siatce SVG.
+- Wspólna, czysta geometria `core/geometry.ts` (bearing, dystans, 8 kierunków) z testami;
+  oba ćwiczenia mają poziomy i wybór typu.
+
+Pozostaje **2.1 składanie kostki 3D** i **2.2 rotacje** (najtrudniejsze) — w kolejnej turze.
+Moduły pamięć/radar (M4) później — patrz `SPEC.md`.
 
 ---
 

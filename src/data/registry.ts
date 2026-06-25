@@ -11,6 +11,8 @@ import { generateArith } from '@/exercises/math/arith';
 import { generateVst } from '@/exercises/math/vst';
 import { generatePercent } from '@/exercises/math/percent';
 import { generateHeading } from '@/exercises/math/heading';
+import { generateOrientation } from '@/exercises/spatial/orientation';
+import { generateCoords } from '@/exercises/spatial/coords';
 import { generateSeries } from '@/exercises/reaction/series';
 
 export interface ModuleMeta {
@@ -99,6 +101,42 @@ export const EXERCISES: ExerciseDef[] = [
     timePerItemSec: 12,
     itemsPerSession: 8,
     generate: generateHeading,
+  },
+  {
+    id: 'spatial-orient',
+    module: 'spatial',
+    title: 'Orientacja i kompas',
+    description: 'Kierunek z punktu A do B oraz obroty kierunku patrzenia (8 kierunków).',
+    timePerItemSec: 18,
+    itemsPerSession: 8,
+    variant: {
+      label: 'TYP',
+      default: 'all',
+      options: [
+        { value: 'all', label: 'Wszystkie' },
+        { value: 'bearing8', label: 'Kierunek' },
+        { value: 'relative', label: 'Obrót' },
+      ],
+    },
+    generate: generateOrientation,
+  },
+  {
+    id: 'spatial-coords',
+    module: 'spatial',
+    title: 'Współrzędne (radar)',
+    description: 'Oszacuj kurs i odległość między samolotem a celem na siatce.',
+    timePerItemSec: 20,
+    itemsPerSession: 8,
+    variant: {
+      label: 'TYP',
+      default: 'all',
+      options: [
+        { value: 'all', label: 'Wszystkie' },
+        { value: 'bearing', label: 'Kurs' },
+        { value: 'distance', label: 'Dystans' },
+      ],
+    },
+    generate: generateCoords,
   },
   {
     id: 'react-simple',

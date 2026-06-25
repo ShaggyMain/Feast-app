@@ -21,15 +21,32 @@ export interface Choice {
 
 /**
  * Optional visual that accompanies a generated item (rendered by `ui/Figure`).
- * Discriminated by `type` so later modules can add their own visuals.
+ * Discriminated by `type` so each module can add its own visuals.
  */
-export type FigureSpec = {
-  type: 'heading';
-  /** Current heading, 0..359. */
-  heading: number;
-  /** Signed degrees to turn for the visual cue (right = +, left = −). Optional. */
-  turn?: number;
-};
+export interface GridPoint {
+  x: number;
+  y: number;
+  label?: string;
+  /** 'a' = primary (you/aircraft), 'b' = target. */
+  role?: 'a' | 'b';
+}
+
+export type FigureSpec =
+  | {
+      type: 'heading';
+      /** Current heading, 0..359. */
+      heading: number;
+      /** Signed degrees to turn for the visual cue (right = +, left = −). */
+      turn?: number;
+    }
+  | {
+      type: 'grid';
+      /** Number of cells per side (coordinates run 0..cells). */
+      cells: number;
+      points: GridPoint[];
+      /** Draw an arrow from the first to the second point. */
+      arrow?: boolean;
+    };
 
 /**
  * A single procedurally generated task. Generators are pure functions
