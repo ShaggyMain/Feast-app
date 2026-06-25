@@ -135,6 +135,7 @@ export type RunnerKind =
   | 'reaction-gonogo'
   | 'memory'
   | 'nback'
+  | 'multipass'
   | 'radar';
 
 /**

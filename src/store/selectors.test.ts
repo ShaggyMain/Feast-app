@@ -1,5 +1,5 @@
 import type { ExerciseResult } from '../types';
-import { bestScore, dailyStreak, exerciseStats, overallStats, series } from './selectors';
+import { bestScore, dailyStreak, exerciseStats, overallStats, series, suggestLevel } from './selectors';
 
 function result(partial: Partial<ExerciseResult>): ExerciseResult {
   return {
@@ -101,5 +101,33 @@ describe('dailyStreak', () => {
 
   it('is 0 with no results', () => {
     expect(dailyStreak([], new Date())).toBe(0);
+  });
+});
+
+describe('suggestLevel', () => {
+  it('falls back without history', () => {
+    expect(suggestLevel([], 'x', 'medium')).toBe('medium');
+  });
+
+  it('bumps up after two strong sessions at the current level', () => {
+    const rs = [
+      result({ exercise: 'x', level: 'medium', accuracy: 0.9 }),
+      result({ exercise: 'x', level: 'medium', accuracy: 0.88 }),
+    ];
+    expect(suggestLevel(rs, 'x', 'easy')).toBe('hard');
+  });
+
+  it('drops down after a weak last session', () => {
+    const rs = [result({ exercise: 'x', level: 'medium', accuracy: 0.4 })];
+    expect(suggestLevel(rs, 'x', 'easy')).toBe('easy');
+  });
+
+  it('stays put on mixed/ok performance and never exceeds hard/easy', () => {
+    expect(suggestLevel([result({ exercise: 'x', level: 'medium', accuracy: 0.7 })], 'x', 'easy')).toBe('medium');
+    const hi = [
+      result({ exercise: 'x', level: 'hard', accuracy: 0.95 }),
+      result({ exercise: 'x', level: 'hard', accuracy: 0.9 }),
+    ];
+    expect(suggestLevel(hi, 'x', 'easy')).toBe('hard');
   });
 });

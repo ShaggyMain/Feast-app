@@ -5,6 +5,7 @@ import { ExerciseRunner } from '@/runner/ExerciseRunner';
 import { ReactionExercise } from '@/exercises/reaction/ReactionExercise';
 import { MemoryExercise } from '@/exercises/memory/MemoryExercise';
 import { NBackExercise } from '@/exercises/memory/NBackExercise';
+import { MultipassExercise } from '@/exercises/memory/MultipassExercise';
 import { RadarExercise } from '@/exercises/memory/radar/RadarExercise';
 
 export default function ExerciseScreen() {
@@ -22,6 +23,8 @@ export default function ExerciseScreen() {
         return <MemoryExercise exerciseId={exerciseId} />;
       case 'nback':
         return <NBackExercise exerciseId={exerciseId} />;
+      case 'multipass':
+        return <MultipassExercise exerciseId={exerciseId} />;
       case 'radar':
         return <RadarExercise exerciseId={exerciseId} />;
       default:

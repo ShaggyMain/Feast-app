@@ -21,9 +21,11 @@ export default function SettingsScreen() {
   const defaultLevel = useSettingsStore((s) => s.defaultLevel);
   const haptics = useSettingsStore((s) => s.haptics);
   const sound = useSettingsStore((s) => s.sound);
+  const adaptive = useSettingsStore((s) => s.adaptive);
   const setDefaultLevel = useSettingsStore((s) => s.setDefaultLevel);
   const setHaptics = useSettingsStore((s) => s.setHaptics);
   const setSound = useSettingsStore((s) => s.setSound);
+  const setAdaptive = useSettingsStore((s) => s.setAdaptive);
 
   return (
     <Screen>
@@ -32,6 +34,22 @@ export default function SettingsScreen() {
         <AppText variant="bodyMuted">Od tego poziomu startują nowe ćwiczenia.</AppText>
         <View style={styles.control}>
           <SegmentedControl value={defaultLevel} options={LEVEL_OPTIONS} onChange={setDefaultLevel} />
+        </View>
+      </Card>
+
+      <Card>
+        <View style={styles.switchRow}>
+          <View style={styles.switchText}>
+            <AppText variant="subtitle">Adaptacyjna trudność</AppText>
+            <AppText variant="bodyMuted">
+              Proponuje poziom startowy wg ostatnich wyników (możesz go zmienić przed startem).
+            </AppText>
+          </View>
+          <Switch
+            value={adaptive}
+            onValueChange={setAdaptive}
+            trackColor={{ true: theme.tint, false: theme.border }}
+          />
         </View>
       </Card>
 

@@ -4,6 +4,8 @@
  */
 import type { Difficulty, ExerciseResult, ModuleId } from '@/types';
 
+const LEVEL_ORDER: Difficulty[] = ['easy', 'medium', 'hard'];
+
 export function resultsForExercise(
   results: ExerciseResult[],
   exerciseId: string,
@@ -123,4 +125,26 @@ export function dailyStreak(results: ExerciseResult[], now: Date = new Date()): 
     cursor.setUTCDate(cursor.getUTCDate() - 1);
   }
   return streak;
+}
+
+/**
+ * Adaptive difficulty: suggest a starting level for an exercise from its recent
+ * history. Two strong sessions at the current level → bump up; a weak last
+ * session → drop down; otherwise stay. Falls back when there is no history.
+ */
+export function suggestLevel(
+  results: ExerciseResult[],
+  exerciseId: string,
+  fallback: Difficulty,
+): Difficulty {
+  const xs = results.filter((r) => r.exercise === exerciseId);
+  if (xs.length === 0) return fallback;
+  const current = xs[0].level; // newest-first
+  const ci = LEVEL_ORDER.indexOf(current);
+  const atLevel = xs.filter((r) => r.level === current);
+  const lastTwoHigh = atLevel.length >= 2 && atLevel.slice(0, 2).every((r) => r.accuracy >= 0.85);
+  const lastLow = atLevel.length >= 1 && atLevel[0].accuracy <= 0.5;
+  if (lastTwoHigh && ci < LEVEL_ORDER.length - 1) return LEVEL_ORDER[ci + 1];
+  if (lastLow && ci > 0) return LEVEL_ORDER[ci - 1];
+  return current;
 }

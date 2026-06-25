@@ -97,7 +97,14 @@ nieobsłużone. Czysta logika ruchu/separacji w `radar/sim.ts` z testami.
   na czas, z podsumowaniem wg modułu i osobnym rekordem. `PlayItem` wydzielony do reużycia,
   builder pozycji (`exam.ts`) z testami.
 
-Pozostaje **3.3 Multipass** oraz **Radar Etap 2** (rozbudowa). Patrz `SPEC.md`.
+**Domknięcie M3/M5:**
+- **3.3 Multipass** (`mem-multipass`) — dwa równoległe tory (kolor=zielony, kształt=trójkąt),
+  niezależne timery, wynik per tor + łączny (koszt podzielności uwagi).
+- **Adaptacyjna trudność** (opcja w Ustawieniach) — `suggestLevel` proponuje poziom startowy
+  wg ostatnich wyników (po 2 mocnych sesjach wyżej, po słabej niżej). Czysta logika z testami.
+
+Wszystkie ćwiczenia ze SPEC są zaimplementowane. Opcjonalnie zostaje **Radar Etap 2**
+(komendy prędkości/kursu, zmienne reguły) i **M6** (wydanie przez EAS). Patrz `SPEC.md`.
 
 ---
 

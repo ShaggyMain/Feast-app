@@ -20,7 +20,7 @@ import { getExercise, getModule } from '@/data/registry';
 import { gradeItem, summarize } from '@/runner/scoring';
 import { buildSession } from '@/runner/session';
 import { useResultsStore } from '@/store/results';
-import { useSettingsStore } from '@/store/settings';
+import { pickInitialLevel, useSettingsStore } from '@/store/settings';
 import { bestScore } from '@/store/selectors';
 import { makeId } from '@/core/id';
 import { playCue } from '@/core/sound';
@@ -61,7 +61,7 @@ export function ExerciseRunner({ exerciseId }: { exerciseId: string }) {
   const addResult = useResultsStore((s) => s.addResult);
   const results = useResultsStore((s) => s.results);
 
-  const [level, setLevel] = useState<Difficulty>(() => useSettingsStore.getState().defaultLevel);
+  const [level, setLevel] = useState<Difficulty>(() => pickInitialLevel(exerciseId));
   const [variant, setVariant] = useState<string | undefined>(() => def?.variant?.default);
   const [phase, setPhase] = useState<Phase>('intro');
   const [baseSeed, setBaseSeed] = useState(makeSeed);

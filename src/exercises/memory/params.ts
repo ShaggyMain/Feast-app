@@ -45,6 +45,26 @@ export function nbackParams(level: Difficulty): NBackParams {
   }
 }
 
+export interface MultipassParams {
+  durationMs: number;
+  /** Full stimulus cycle (blank + visible). */
+  cycleMs: number;
+  /** Visible window within a cycle to respond. */
+  onMs: number;
+  targetRate: number;
+}
+
+export function multipassParams(level: Difficulty): MultipassParams {
+  switch (level) {
+    case 'easy':
+      return { durationMs: 45000, cycleMs: 2000, onMs: 1300, targetRate: 0.35 };
+    case 'medium':
+      return { durationMs: 50000, cycleMs: 1600, onMs: 1050, targetRate: 0.35 };
+    case 'hard':
+      return { durationMs: 55000, cycleMs: 1250, onMs: 850, targetRate: 0.35 };
+  }
+}
+
 export const NBACK_ALPHABET = ['C', 'H', 'K', 'L', 'P', 'Q', 'R', 'T'] as const;
 
 export interface NBackSequence {

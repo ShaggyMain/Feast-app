@@ -177,6 +177,15 @@ export const EXERCISES: ExerciseDef[] = [
     runner: 'nback',
   },
   {
+    id: 'mem-multipass',
+    module: 'memory',
+    title: 'Multipass (dwa tory)',
+    description: 'Monitoruj dwa tory naraz: kolor (zielony) i kształt (trójkąt). Reaguj na cele.',
+    timePerItemSec: 0,
+    itemsPerSession: 0,
+    runner: 'multipass',
+  },
+  {
     id: 'mem-radar',
     module: 'memory',
     title: 'Radar (DART) — MVP',

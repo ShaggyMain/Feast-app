@@ -11,7 +11,7 @@ import * as Haptics from 'expo-haptics';
 
 import type { Difficulty, ExerciseResult } from '@/types';
 import { useResultsStore } from '@/store/results';
-import { useSettingsStore } from '@/store/settings';
+import { pickInitialLevel, useSettingsStore } from '@/store/settings';
 import { bestScore } from '@/store/selectors';
 import { playCue, type SoundCue } from '@/core/sound';
 import { makeId } from '@/core/id';
@@ -66,7 +66,7 @@ export function CustomExerciseShell({
   const hapticsOn = useSettingsStore((s) => s.haptics);
   const soundOn = useSettingsStore((s) => s.sound);
 
-  const [level, setLevel] = useState<Difficulty>(() => useSettingsStore.getState().defaultLevel);
+  const [level, setLevel] = useState<Difficulty>(() => pickInitialLevel(exerciseId));
   const [phase, setPhase] = useState<'intro' | 'running' | 'done'>('intro');
   const [runKey, setRunKey] = useState(0);
   const [summary, setSummary] = useState<CustomSummary | null>(null);

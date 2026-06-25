@@ -1,5 +1,5 @@
 import { mulberry32 } from '../../core/rng';
-import { buildNbackSequence, memoryParams, nbackParams } from './params';
+import { buildNbackSequence, memoryParams, multipassParams, nbackParams } from './params';
 import { buildGaugeRound } from './gauges';
 
 describe('memory params', () => {
@@ -13,6 +13,11 @@ describe('memory params', () => {
   it('memory exposure shortens and gauges grow with difficulty', () => {
     expect(memoryParams('hard').exposeMs).toBeLessThan(memoryParams('easy').exposeMs);
     expect(memoryParams('hard').baseGauges).toBeGreaterThan(memoryParams('easy').baseGauges);
+  });
+
+  it('multipass speeds up at higher difficulty', () => {
+    expect(multipassParams('hard').cycleMs).toBeLessThan(multipassParams('easy').cycleMs);
+    expect(multipassParams('hard').onMs).toBeLessThan(multipassParams('easy').onMs);
   });
 });
 
