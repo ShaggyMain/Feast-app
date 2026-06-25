@@ -53,6 +53,11 @@ Dodatkowo: **onboarding** (krótko o FEAST + strategie, pokazywany przy pierwszy
 osobny **dźwięk „czas minął"**, oraz **własna ikona i splash** (granatowy kompas/radar,
 generowane z SVG).
 
+**Dopracowania M2:** reakcja (4.1/4.2) i serie (4.3) mają teraz **poziomy trudności** — w go/no-go
+krótsze okna/ISI i więcej prób, w czasie reakcji krótszy deadline (zbyt wolno = pominięcie),
+w seriach **dłuższe ciągi** na wyższym poziomie. Serie mają też **wybór typu** (Wszystkie /
+Arytmetyczne / Geometryczne / Kwadraty), analogicznie do trybu jednego działania w 1.1.
+
 Kolejne moduły (przestrzenne, pamięć/radar) dodajemy w M3–M5 — patrz `SPEC.md`.
 
 ---

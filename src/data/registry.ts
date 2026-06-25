@@ -125,6 +125,16 @@ export const EXERCISES: ExerciseDef[] = [
     description: 'Rozpoznaj regułę i podaj kolejny element ciągu — 4 opcje.',
     timePerItemSec: 25,
     itemsPerSession: 8,
+    variant: {
+      label: 'TYP CIĄGU',
+      default: 'all',
+      options: [
+        { value: 'all', label: 'Wszystkie' },
+        { value: 'arithmetic', label: 'Arytm.' },
+        { value: 'geometric', label: 'Geom.' },
+        { value: 'squares', label: 'Kwadraty' },
+      ],
+    },
     generate: generateSeries,
   },
 ];

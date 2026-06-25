@@ -97,4 +97,30 @@ describe('generateSeries (4.3)', () => {
     for (let seed = 0; seed < 200; seed++) seen.add(String(generateSeries(seed, 'hard').category));
     expect(seen.size).toBeGreaterThanOrEqual(4);
   });
+
+  it('shows longer sequences at higher difficulty (arithmetic)', () => {
+    for (let seed = 0; seed < 60; seed++) {
+      const easy = parseTerms(generateSeries(seed, 'easy', 'arithmetic').prompt).length;
+      const hard = parseTerms(generateSeries(seed, 'hard', 'arithmetic').prompt).length;
+      expect(easy).toBe(4);
+      expect(hard).toBe(6);
+    }
+  });
+
+  it('honors the rule-type variant', () => {
+    for (const [variant, rule] of [
+      ['arithmetic', 'arithmetic'],
+      ['geometric', 'geometric'],
+      ['squares', 'squares'],
+    ] as const) {
+      for (const level of LEVELS) {
+        for (let seed = 0; seed < 80; seed++) {
+          const item = generateSeries(seed, level, variant);
+          expect(item.category).toBe(rule);
+          expectSingleCorrectChoice(item);
+          verifyRule(item);
+        }
+      }
+    }
+  });
 });

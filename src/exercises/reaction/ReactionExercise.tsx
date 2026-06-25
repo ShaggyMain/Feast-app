@@ -1,8 +1,9 @@
 /**
  * Custom interactive runner for the reaction-time exercises (4.1 simple
- * reaction, 4.2 go/no-go). These don't fit the generated-item runner — they
- * measure response latency — so they have their own component but still persist
- * a standard ExerciseResult (accuracy + avgResponseMs + score).
+ * reaction, 4.2 go/no-go). These measure response latency rather than grading
+ * generated items, so they have their own component, but still persist a
+ * standard ExerciseResult. Difficulty (easy/medium/hard) tunes the response
+ * deadline / stimulus windows / trial count via `params.ts`.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
@@ -10,24 +11,27 @@ import { useRouter } from 'expo-router';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as Haptics from 'expo-haptics';
 
-import type { ExerciseResult, RunnerKind } from '@/types';
+import type { Difficulty, ExerciseResult, RunnerKind } from '@/types';
 import { useResultsStore } from '@/store/results';
 import { useSettingsStore } from '@/store/settings';
 import { bestScore } from '@/store/selectors';
-import { playCue } from '@/core/sound';
+import { playCue, type SoundCue } from '@/core/sound';
 import { makeId } from '@/core/id';
+import { getExercise } from '@/data/registry';
+import { gonogoParams, simpleParams, type GoNoGoParams, type SimpleParams } from '@/exercises/reaction/params';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { Screen } from '@/ui/Screen';
 import { PrimaryButton } from '@/ui/PrimaryButton';
+import { SegmentedControl } from '@/ui/SegmentedControl';
 import { Stat } from '@/ui/Stat';
 import { AppText } from '@/ui/Text';
-import { getExercise } from '@/data/registry';
 
-const SIMPLE_TRIALS = 5;
-const GONOGO_TRIALS = 14;
-const GONOGO_ISI_MS = 600;
-const GONOGO_WINDOW_MS = 900;
+const LEVEL_OPTIONS: { value: Difficulty; label: string }[] = [
+  { value: 'easy', label: 'Łatwy' },
+  { value: 'medium', label: 'Średni' },
+  { value: 'hard', label: 'Trudny' },
+];
 
 export interface ReactionSummary {
   totalItems: number;
@@ -37,6 +41,8 @@ export interface ReactionSummary {
   score: number;
   lines: string[];
 }
+
+type FeedbackFn = (cue: SoundCue) => void;
 
 export function ReactionExercise({ exerciseId, kind }: { exerciseId: string; kind: RunnerKind }) {
   const router = useRouter();
@@ -48,19 +54,22 @@ export function ReactionExercise({ exerciseId, kind }: { exerciseId: string; kin
   const hapticsOn = useSettingsStore((s) => s.haptics);
   const soundOn = useSettingsStore((s) => s.sound);
 
+  const [level, setLevel] = useState<Difficulty>(() => useSettingsStore.getState().defaultLevel);
   const [phase, setPhase] = useState<'intro' | 'running' | 'done'>('intro');
   const [runKey, setRunKey] = useState(0);
   const [summary, setSummary] = useState<ReactionSummary | null>(null);
   const prevBestRef = useRef(0);
 
-  const feedback = useCallback(
-    (ok: boolean) => {
+  const feedback = useCallback<FeedbackFn>(
+    (cue) => {
       if (hapticsOn && Platform.OS !== 'web') {
         Haptics.notificationAsync(
-          ok ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Error,
+          cue === 'correct'
+            ? Haptics.NotificationFeedbackType.Success
+            : Haptics.NotificationFeedbackType.Error,
         ).catch(() => {});
       }
-      if (soundOn) playCue(ok ? 'correct' : 'wrong');
+      if (soundOn) playCue(cue);
     },
     [hapticsOn, soundOn],
   );
@@ -72,7 +81,7 @@ export function ReactionExercise({ exerciseId, kind }: { exerciseId: string; kin
         id: makeId(),
         module: def.module,
         exercise: def.id,
-        level: 'medium',
+        level,
         date: new Date().toISOString(),
         totalItems: result.totalItems,
         correct: result.correct,
@@ -84,15 +93,15 @@ export function ReactionExercise({ exerciseId, kind }: { exerciseId: string; kin
       setSummary(result);
       setPhase('done');
     },
-    [def, addResult],
+    [def, addResult, level],
   );
 
   const start = useCallback(() => {
-    prevBestRef.current = def ? bestScore(useResultsStore.getState().results, def.id) : 0;
+    prevBestRef.current = def ? bestScore(useResultsStore.getState().results, def.id, level) : 0;
     setSummary(null);
     setRunKey((k) => k + 1);
     setPhase('running');
-  }, [def]);
+  }, [def, level]);
 
   if (!def) {
     return (
@@ -111,21 +120,27 @@ export function ReactionExercise({ exerciseId, kind }: { exerciseId: string; kin
         <View style={styles.tipBox}>
           <AppText variant="bodyMuted">
             {kind === 'reaction-simple'
-              ? 'Czekaj na zielony ekran i dotknij jak najszybciej. Dotknięcie przed zielonym to falstart.'
-              : 'Dotknij na ZIELONY (GO), wstrzymaj się na CZERWONY (NO-GO). Liczy się szybkość i opanowanie.'}
+              ? 'Czekaj na zielony ekran i dotknij jak najszybciej. Dotknięcie przed zielonym to falstart, zbyt wolne — pominięcie.'
+              : 'Dotknij na ZIELONY (GO), wstrzymaj się na CZERWONY (STOP). Liczy się szybkość i opanowanie.'}
           </AppText>
         </View>
-        <PrimaryButton label="Start" onPress={start} />
-        <PrimaryButton label="Wróć" variant="ghost" onPress={() => router.back()} />
+        <AppText variant="label">POZIOM TRUDNOŚCI</AppText>
+        <SegmentedControl value={level} options={LEVEL_OPTIONS} onChange={setLevel} accent={theme.tint} />
+        <View style={styles.actions}>
+          <PrimaryButton label="Start" onPress={start} />
+          <PrimaryButton label="Wróć" variant="ghost" onPress={() => router.back()} />
+        </View>
       </Screen>
     );
   }
 
   if (phase === 'done' && summary) {
     const isRecord = summary.score > prevBestRef.current;
+    const levelLabel = LEVEL_OPTIONS.find((l) => l.value === level)?.label ?? level;
     return (
       <Screen>
         <AppText variant="title">Koniec</AppText>
+        <AppText variant="caption">Poziom: {levelLabel}</AppText>
         <View style={styles.statRow}>
           <Stat label="Wynik" value={String(summary.score)} accent={theme.tint} />
           <Stat label="Trafność" value={`${Math.round(summary.accuracy * 100)}%`} />
@@ -137,104 +152,123 @@ export function ReactionExercise({ exerciseId, kind }: { exerciseId: string; kin
           </AppText>
         ))}
         <View
-          style={[
-            styles.recordBanner,
-            { backgroundColor: isRecord ? theme.success : theme.surfaceAlt },
-          ]}>
+          style={[styles.recordBanner, { backgroundColor: isRecord ? theme.success : theme.surfaceAlt }]}>
           <AppText variant="caption" color={isRecord ? theme.successText : theme.textSecondary}>
             {isRecord
-              ? `Nowy rekord! Poprzedni: ${prevBestRef.current}`
-              : `Najlepszy wynik: ${Math.max(prevBestRef.current, summary.score)}`}
+              ? `Nowy rekord (${levelLabel})! Poprzedni: ${prevBestRef.current}`
+              : `Najlepszy wynik (${levelLabel}): ${Math.max(prevBestRef.current, summary.score)}`}
           </AppText>
         </View>
         <View style={styles.actions}>
           <PrimaryButton label="Jeszcze raz" onPress={start} />
-          <PrimaryButton label="Statystyki" variant="secondary" onPress={() => router.push('/stats')} />
+          <PrimaryButton label="Zmień poziom" variant="secondary" onPress={() => setPhase('intro')} />
           <PrimaryButton label="Wróć" variant="ghost" onPress={() => router.back()} />
         </View>
       </Screen>
     );
   }
 
-  // running
   return kind === 'reaction-simple' ? (
-    <SimpleReaction key={runKey} trials={SIMPLE_TRIALS} feedback={feedback} onFinish={onFinish} />
+    <SimpleReaction key={runKey} params={simpleParams(level)} feedback={feedback} onFinish={onFinish} />
   ) : (
-    <GoNoGo key={runKey} trials={GONOGO_TRIALS} feedback={feedback} onFinish={onFinish} />
+    <GoNoGo key={runKey} params={gonogoParams(level)} feedback={feedback} onFinish={onFinish} />
   );
 }
 
 // ---------------------------------------------------------------------------
 
-interface RunnerProps {
-  trials: number;
-  feedback: (ok: boolean) => void;
+function SimpleReaction({
+  params,
+  feedback,
+  onFinish,
+}: {
+  params: SimpleParams;
+  feedback: FeedbackFn;
   onFinish: (summary: ReactionSummary) => void;
-}
-
-function SimpleReaction({ trials, feedback, onFinish }: RunnerProps) {
+}) {
   const theme = useTheme();
+  const { trials, deadlineMs } = params;
+
   const [state, setState] = useState<'waiting' | 'go' | 'falsestart'>('waiting');
   const [done, setDone] = useState(0);
-  const rtsRef = useRef<number[]>([]);
-  const falseStartsRef = useRef(0);
+  const [retry, setRetry] = useState(0);
+  const resolvedRef = useRef(false);
   const goAtRef = useRef(0);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const waitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const deadlineTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rtsRef = useRef<number[]>([]);
+  const missesRef = useRef(0);
+  const falseStartsRef = useRef(0);
 
-  const scheduleGo = useCallback(() => {
-    setState('waiting');
-    const delay = 1000 + Math.random() * 3000;
-    timerRef.current = setTimeout(() => {
-      goAtRef.current = Date.now();
-      setState('go');
-    }, delay);
-  }, []);
-
-  useEffect(() => {
-    scheduleGo();
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [scheduleGo]);
-
-  const finish = () => {
+  const finish = useCallback(() => {
     const rts = rtsRef.current;
     const avg = rts.length ? Math.round(rts.reduce((a, b) => a + b, 0) / rts.length) : 0;
     const best = rts.length ? Math.min(...rts) : 0;
-    const fs = falseStartsRef.current;
     const score = rts.reduce((s, rt) => s + Math.max(0, 600 - rt), 0);
     onFinish({
       totalItems: trials,
-      correct: trials,
-      accuracy: trials / (trials + fs),
+      correct: rts.length,
+      accuracy: trials > 0 ? rts.length / trials : 0,
       avgResponseMs: avg,
       score,
-      lines: [`Najlepszy czas: ${best} ms`, `Falstarty: ${fs}`],
+      lines: [
+        `Najlepszy czas: ${best} ms`,
+        `Pominięcia (za wolno): ${missesRef.current}`,
+        `Falstarty: ${falseStartsRef.current}`,
+      ],
     });
-  };
+  }, [trials, onFinish]);
+
+  // Each (done, retry) starts a trial: wait a random delay, flash green, then
+  // a deadline. A false start bumps `retry` to restart the same trial.
+  useEffect(() => {
+    if (done >= trials) {
+      finish();
+      return;
+    }
+    let cancelled = false;
+    resolvedRef.current = false;
+    setState('waiting');
+    waitTimer.current = setTimeout(() => {
+      if (cancelled) return;
+      goAtRef.current = Date.now();
+      setState('go');
+      deadlineTimer.current = setTimeout(() => {
+        if (cancelled || resolvedRef.current) return;
+        resolvedRef.current = true;
+        missesRef.current += 1;
+        feedback('timeout');
+        setDone((d) => d + 1);
+      }, deadlineMs);
+    }, 1000 + Math.random() * 3000);
+    return () => {
+      cancelled = true;
+      if (waitTimer.current) clearTimeout(waitTimer.current);
+      if (deadlineTimer.current) clearTimeout(deadlineTimer.current);
+    };
+  }, [done, retry, trials, deadlineMs, feedback, finish]);
 
   const handlePress = () => {
     if (state === 'waiting') {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      if (waitTimer.current) clearTimeout(waitTimer.current);
       falseStartsRef.current += 1;
-      feedback(false);
+      feedback('wrong');
       setState('falsestart');
-      timerRef.current = setTimeout(scheduleGo, 900);
+      setTimeout(() => setRetry((r) => r + 1), 900);
       return;
     }
     if (state === 'go') {
+      if (resolvedRef.current) return;
+      resolvedRef.current = true;
+      if (deadlineTimer.current) clearTimeout(deadlineTimer.current);
       rtsRef.current.push(Date.now() - goAtRef.current);
-      feedback(true);
-      const n = done + 1;
-      setDone(n);
-      if (n >= trials) finish();
-      else scheduleGo();
+      feedback('correct');
+      setDone((d) => d + 1);
     }
   };
 
   const bg = state === 'go' ? theme.success : state === 'falsestart' ? theme.warning : theme.danger;
-  const title =
-    state === 'go' ? 'TERAZ!' : state === 'falsestart' ? 'Falstart!' : 'Czekaj na zielony…';
+  const title = state === 'go' ? 'TERAZ!' : state === 'falsestart' ? 'Falstart!' : 'Czekaj na zielony…';
   const sub = state === 'go' ? 'dotknij jak najszybciej' : state === 'falsestart' ? 'za wcześnie' : '';
 
   return (
@@ -258,13 +292,22 @@ function SimpleReaction({ trials, feedback, onFinish }: RunnerProps) {
 
 // ---------------------------------------------------------------------------
 
-function buildGoNoGoSequence(trials: number): Array<'go' | 'nogo'> {
-  return Array.from({ length: trials }, () => (Math.random() < 0.7 ? 'go' : 'nogo'));
+function buildSequence(trials: number, goRatio: number): Array<'go' | 'nogo'> {
+  return Array.from({ length: trials }, () => (Math.random() < goRatio ? 'go' : 'nogo'));
 }
 
-function GoNoGo({ trials, feedback, onFinish }: RunnerProps) {
+function GoNoGo({
+  params,
+  feedback,
+  onFinish,
+}: {
+  params: GoNoGoParams;
+  feedback: FeedbackFn;
+  onFinish: (summary: ReactionSummary) => void;
+}) {
   const theme = useTheme();
-  const seqRef = useRef<Array<'go' | 'nogo'>>(buildGoNoGoSequence(trials));
+  const { trials, windowMs, isiMs, goRatio } = params;
+  const seqRef = useRef<Array<'go' | 'nogo'>>(buildSequence(trials, goRatio));
   const [idx, setIdx] = useState(0);
   const [phase, setPhase] = useState<'blank' | 'stim'>('blank');
   const stim = seqRef.current[Math.min(idx, trials - 1)];
@@ -316,24 +359,24 @@ function GoNoGo({ trials, feedback, onFinish }: RunnerProps) {
           else correctRejRef.current += 1;
         }
         setIdx((i) => i + 1);
-      }, GONOGO_WINDOW_MS);
-    }, GONOGO_ISI_MS);
+      }, windowMs);
+    }, isiMs);
     return () => {
       cancelled = true;
       clearTimeout(isiTimer);
       if (windowTimer.current) clearTimeout(windowTimer.current);
     };
-  }, [idx, trials, finish]);
+  }, [idx, trials, windowMs, isiMs, finish]);
 
   const handlePress = () => {
     if (phase !== 'stim' || respondedRef.current) return;
     respondedRef.current = true;
     if (seqRef.current[idx] === 'go') {
       hitsRef.current.push(Date.now() - stimAtRef.current);
-      feedback(true);
+      feedback('correct');
     } else {
       falseAlarmsRef.current += 1;
-      feedback(false);
+      feedback('wrong');
     }
     if (windowTimer.current) clearTimeout(windowTimer.current);
     setTimeout(() => setIdx((i) => i + 1), 220);
