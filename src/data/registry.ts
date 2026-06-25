@@ -177,6 +177,15 @@ export const EXERCISES: ExerciseDef[] = [
     runner: 'nback',
   },
   {
+    id: 'mem-radar',
+    module: 'memory',
+    title: 'Radar (DART) — MVP',
+    description: 'Sprowadzaj samoloty do lądowania dotykiem i utrzymuj separację w czasie rzeczywistym.',
+    timePerItemSec: 0,
+    itemsPerSession: 0,
+    runner: 'radar',
+  },
+  {
     id: 'react-simple',
     module: 'reaction',
     title: 'Czas reakcji',

@@ -129,7 +129,13 @@ export interface VariantSpec {
  * Which UI drives an exercise. Most use the standard generated-item runner;
  * reaction-time exercises use their own interactive component.
  */
-export type RunnerKind = 'standard' | 'reaction-simple' | 'reaction-gonogo' | 'memory' | 'nback';
+export type RunnerKind =
+  | 'standard'
+  | 'reaction-simple'
+  | 'reaction-gonogo'
+  | 'memory'
+  | 'nback'
+  | 'radar';
 
 /**
  * Definition of a runnable exercise. Pure: metadata plus (for standard

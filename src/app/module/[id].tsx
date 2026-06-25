@@ -48,7 +48,9 @@ export default function ModuleScreen() {
                 <AppText variant="caption">
                   {exercise.timePerItemSec > 0
                     ? `${exercise.timePerItemSec}s · ${exercise.itemsPerSession} pyt.`
-                    : `${exercise.itemsPerSession} prób`}
+                    : exercise.itemsPerSession > 0
+                      ? `${exercise.itemsPerSession} prób`
+                      : 'sesja na czas'}
                 </AppText>
               </View>
               <PrimaryButton

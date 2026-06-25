@@ -84,8 +84,12 @@ Arytmetyczne / Geometryczne / Kwadraty), analogicznie do trybu jednego działani
   liczone trafienia / pominięcia / fałszywe alarmy. Czyste budowanie sekwencji (kontrolowany
   odsetek trafień) z testami; wspólny shell `CustomExercise` dla ćwiczeń interaktywnych.
 
-Pozostaje **3.3 Multipass** i flagowy **3.4 Radar/DART** (real-time), oraz **M5**
-(wykresy postępów, tryb egzaminacyjny). Patrz `SPEC.md`.
+**3.4 Radar/DART — MVP** (`mem-radar`): radar w czasie rzeczywistym (pętla
+`requestAnimationFrame`). Samoloty lecą do pasa; dotknięcie sprowadza je do lądowania,
+trzeba utrzymywać separację (zbyt bliskie = konflikt). Wynik: lądowania − konflikty −
+nieobsłużone. Czysta logika ruchu/separacji w `radar/sim.ts` z testami.
+
+Pozostaje **3.3 Multipass** oraz **M5** (wykresy postępów, tryb egzaminacyjny). Patrz `SPEC.md`.
 
 ---
 
