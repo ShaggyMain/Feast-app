@@ -40,7 +40,20 @@ zestawy. Każde zadanie ma `category`, a balans pilnuje rozkładu.
 **Dźwięk** (opcja w Ustawieniach, domyślnie wył.): krótkie sygnały przy poprawnej/błędnej
 odpowiedzi przez `expo-audio`; pliki WAV syntezowane lokalnie (offline, `core/sound.ts`).
 
-Kolejne moduły (reakcja + serie, przestrzenne, pamięć/radar) dodajemy w M2–M5 — patrz `SPEC.md`.
+**M2 (Moduł 4 — Reakcja + serie liczbowe):**
+- **4.1 Czas reakcji** (`react-simple`) — czekaj na zielony, dotknij jak najszybciej; pomiar ms,
+  wykrywanie falstartu (własny komponent `reaction/ReactionExercise`).
+- **4.2 Reakcja z wyborem / go-no-go** (`react-gonogo`) — reaguj na GO, wstrzymaj na STOP;
+  trafienia, fałszywe alarmy, pominięcia.
+- **4.3 Serie liczbowe** (`series`) — rozpoznaj regułę i podaj kolejny element. Rodziny reguł:
+  arytmetyczna, geometryczna, druga różnica, naprzemienna, Fibonacci, kwadraty, sześciany
+  (różnorodność „z definicji”).
+
+Dodatkowo: **onboarding** (krótko o FEAST + strategie, pokazywany przy pierwszym uruchomieniu),
+osobny **dźwięk „czas minął"**, oraz **własna ikona i splash** (granatowy kompas/radar,
+generowane z SVG).
+
+Kolejne moduły (przestrzenne, pamięć/radar) dodajemy w M3–M5 — patrz `SPEC.md`.
 
 ---
 

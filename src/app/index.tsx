@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Radius, Spacing } from '@/constants/theme';
@@ -6,6 +7,7 @@ import { EXERCISES, MODULES, exercisesForModule } from '@/data/registry';
 import { useTheme } from '@/hooks/use-theme';
 import { useResultsStore } from '@/store/results';
 import { overallStats } from '@/store/selectors';
+import { useSettingsStore } from '@/store/settings';
 import { Card } from '@/ui/Card';
 import { PrimaryButton } from '@/ui/PrimaryButton';
 import { Screen } from '@/ui/Screen';
@@ -17,6 +19,13 @@ export default function Home() {
   const router = useRouter();
   const results = useResultsStore((s) => s.results);
   const stats = overallStats(results);
+  const hasHydrated = useSettingsStore((s) => s.hasHydrated);
+  const onboardingSeen = useSettingsStore((s) => s.onboardingSeen);
+
+  // Show onboarding once, on first launch (after settings have hydrated).
+  useEffect(() => {
+    if (hasHydrated && !onboardingSeen) router.replace('/onboarding');
+  }, [hasHydrated, onboardingSeen, router]);
 
   const quickStart = () => {
     const mathExercises = EXERCISES.filter((e) => e.module === 'math');
@@ -77,6 +86,7 @@ export default function Home() {
 
       <View style={styles.actions}>
         <PrimaryButton label="Statystyki i postępy" variant="secondary" onPress={() => router.push('/stats')} />
+        <PrimaryButton label="Jak działa FEAST" variant="ghost" onPress={() => router.push('/onboarding')} />
         <PrimaryButton label="Ustawienia" variant="ghost" onPress={() => router.push('/settings')} />
       </View>
     </Screen>

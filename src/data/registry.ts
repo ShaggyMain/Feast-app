@@ -11,6 +11,7 @@ import { generateArith } from '@/exercises/math/arith';
 import { generateVst } from '@/exercises/math/vst';
 import { generatePercent } from '@/exercises/math/percent';
 import { generateHeading } from '@/exercises/math/heading';
+import { generateSeries } from '@/exercises/reaction/series';
 
 export interface ModuleMeta {
   id: ModuleId;
@@ -98,6 +99,33 @@ export const EXERCISES: ExerciseDef[] = [
     timePerItemSec: 12,
     itemsPerSession: 8,
     generate: generateHeading,
+  },
+  {
+    id: 'react-simple',
+    module: 'reaction',
+    title: 'Czas reakcji',
+    description: 'Dotknij, gdy ekran zmieni się na zielony. Mierzymy milisekundy.',
+    timePerItemSec: 0,
+    itemsPerSession: 5,
+    runner: 'reaction-simple',
+  },
+  {
+    id: 'react-gonogo',
+    module: 'reaction',
+    title: 'Reakcja z wyborem (go/no-go)',
+    description: 'Dotknij na GO (zielony), wstrzymaj się na STOP (czerwony).',
+    timePerItemSec: 0,
+    itemsPerSession: 14,
+    runner: 'reaction-gonogo',
+  },
+  {
+    id: 'series',
+    module: 'reaction',
+    title: 'Serie liczbowe',
+    description: 'Rozpoznaj regułę i podaj kolejny element ciągu — 4 opcje.',
+    timePerItemSec: 25,
+    itemsPerSession: 8,
+    generate: generateSeries,
   },
 ];
 

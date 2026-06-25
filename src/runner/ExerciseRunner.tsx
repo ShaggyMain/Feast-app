@@ -23,7 +23,7 @@ import { useResultsStore } from '@/store/results';
 import { useSettingsStore } from '@/store/settings';
 import { bestScore } from '@/store/selectors';
 import { makeId } from '@/core/id';
-import { playFeedback } from '@/core/sound';
+import { playCue } from '@/core/sound';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { Screen } from '@/ui/Screen';
@@ -282,7 +282,7 @@ function PlayItem({ item, timeLimitMs, accent, onComplete }: PlayItemProps) {
             : Haptics.NotificationFeedbackType.Error,
         ).catch(() => {});
       }
-      if (soundOn) playFeedback(graded.correct);
+      if (soundOn) playCue(graded.answered ? (graded.correct ? 'correct' : 'wrong') : 'timeout');
 
       setOutcome(graded);
       setPhase('feedback');

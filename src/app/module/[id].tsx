@@ -46,7 +46,9 @@ export default function ModuleScreen() {
                   {stats ? `Rekord: ${stats.bestScore} · prób: ${stats.attempts}` : 'Brak prób'}
                 </AppText>
                 <AppText variant="caption">
-                  {exercise.timePerItemSec}s · {exercise.itemsPerSession} pyt.
+                  {exercise.timePerItemSec > 0
+                    ? `${exercise.timePerItemSec}s · ${exercise.itemsPerSession} pyt.`
+                    : `${exercise.itemsPerSession} prób`}
                 </AppText>
               </View>
               <PrimaryButton

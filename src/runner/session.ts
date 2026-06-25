@@ -25,6 +25,9 @@ export function buildSession(
   variant?: string,
   count = def.itemsPerSession,
 ): GeneratedItem[] {
+  const generate = def.generate;
+  if (!generate) return [];
+
   const items: GeneratedItem[] = [];
   const recentPrompts: string[] = [];
   const recentWindow = Math.min(8, count);
@@ -36,7 +39,7 @@ export function buildSession(
     let chosenScore = -Infinity;
 
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-      const candidate = def.generate(mixSeed(baseSeed, i, attempt), level, variant);
+      const candidate = generate(mixSeed(baseSeed, i, attempt), level, variant);
       const category = candidate.category ?? '';
       const isDuplicate = recentPrompts.includes(candidate.prompt);
 

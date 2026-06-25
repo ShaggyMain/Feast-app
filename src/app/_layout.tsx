@@ -40,6 +40,7 @@ export default function RootLayout() {
             contentStyle: { backgroundColor: palette.background },
           }}>
           <Stack.Screen name="index" options={{ title: 'FEAST Trainer' }} />
+          <Stack.Screen name="onboarding" options={{ title: 'O FEAST' }} />
           <Stack.Screen name="module/[id]" options={{ title: 'Moduł' }} />
           <Stack.Screen name="exercise/[id]" options={{ title: 'Ćwiczenie' }} />
           <Stack.Screen name="stats" options={{ title: 'Statystyki' }} />

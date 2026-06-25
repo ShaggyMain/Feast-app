@@ -77,21 +77,30 @@ export interface VariantSpec {
 }
 
 /**
- * Definition of a runnable exercise. Pure: metadata plus the generator, with no
- * UI concerns. Consumed by the shared ExerciseRunner shell.
+ * Which UI drives an exercise. Most use the standard generated-item runner;
+ * reaction-time exercises use their own interactive component.
+ */
+export type RunnerKind = 'standard' | 'reaction-simple' | 'reaction-gonogo';
+
+/**
+ * Definition of a runnable exercise. Pure: metadata plus (for standard
+ * exercises) the generator, with no UI concerns.
  */
 export interface ExerciseDef {
   id: string;
   module: ModuleId;
   title: string;
   description: string;
-  /** Seconds allowed per item before it times out. */
+  /** Seconds allowed per item before it times out (standard runner). */
   timePerItemSec: number;
-  /** Number of items in one session. */
+  /** Number of items / trials in one session. */
   itemsPerSession: number;
+  /** Which runner drives this exercise (default 'standard'). */
+  runner?: RunnerKind;
   /** Optional focus selector (e.g. which operation to drill). */
   variant?: VariantSpec;
-  generate: (seed: number, level: Difficulty, variant?: string) => GeneratedItem;
+  /** Item generator — required for the standard runner. */
+  generate?: (seed: number, level: Difficulty, variant?: string) => GeneratedItem;
 }
 
 /**
