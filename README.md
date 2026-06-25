@@ -66,8 +66,18 @@ Arytmetyczne / Geometryczne / Kwadraty), analogicznie do trybu jednego działani
 - Wspólna, czysta geometria `core/geometry.ts` (bearing, dystans, 8 kierunków) z testami;
   oba ćwiczenia mają poziomy i wybór typu.
 
-Pozostaje **2.1 składanie kostki 3D** i **2.2 rotacje** (najtrudniejsze) — w kolejnej turze.
-Moduły pamięć/radar (M4) później — patrz `SPEC.md`.
+**M3 część 2 — najtrudniejsze, wizualne:**
+- **2.2 Rotacja figur** (`spatial-rotation`) — wybierz obrót figury wzorcowej; dystraktory to
+  odbicia lustrzane (figura generowana jako chiralna, więc dokładnie jeden obrót jest poprawny).
+  Czysta logika `core/poly.ts` (obroty/odbicia/chiralność) z testami.
+- **2.1 Składanie kostki** (`spatial-cube`) — siatka (hexomino) → 4 sześciany izometryczne,
+  jeden poprawny. Rdzeń `core/cube.ts` (`cubeAdjacency`: symulacja „toczenia kostki", fizycznie
+  poprawne permutacje) wyznacza mapę ścian; dystraktory mają po jednym naruszeniu (ściany
+  przeciwległe obok siebie / lustro / powtórzona ściana). Test niezależnie składa siatkę i
+  potwierdza „dokładnie jedna poprawna".
+- Runner obsługuje teraz **wizualne prompty i wizualne opcje** (siatka/kostki/kształty w SVG).
+
+Moduł pamięć/radar (M4) oraz statystyki/tryb egzaminacyjny (M5) — patrz `SPEC.md`.
 
 ---
 

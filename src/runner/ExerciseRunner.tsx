@@ -10,7 +10,7 @@
  * timers and inputs reset cleanly.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as Haptics from 'expo-haptics';
@@ -332,8 +332,13 @@ function PlayItem({ item, timeLimitMs, accent, onComplete }: PlayItemProps) {
       <TimerBar progress={remainingMs / timeLimitMs} />
 
       <View style={styles.promptBlock}>
+        {item.promptFigure ? (
+          <Figure spec={item.promptFigure} accent={accent} size={item.promptFigure.type === 'net' ? 168 : 132} />
+        ) : null}
         {item.figure ? <Figure spec={item.figure} accent={accent} /> : null}
-        <Text style={[styles.prompt, { color: theme.text }]}>{item.prompt}</Text>
+        <Text style={[item.promptFigure ? styles.promptSmall : styles.prompt, { color: theme.text }]}>
+          {item.prompt}
+        </Text>
         {item.hint ? <Text style={[styles.hint, { color: theme.textSecondary }]}>{item.hint}</Text> : null}
       </View>
 
@@ -350,34 +355,63 @@ function PlayItem({ item, timeLimitMs, accent, onComplete }: PlayItemProps) {
       )}
 
       {item.mode === 'choice' && item.choices ? (
-        <View style={styles.choiceGrid}>
-          {item.choices.map((choice) => {
-            const isCorrect = choice.id === item.correctChoiceId;
-            const isChosen = choice.id === chosenId;
-            let bg = theme.surface;
-            let borderColor = theme.border;
-            let labelColor = theme.text;
-            if (showFeedback && isCorrect) {
-              bg = theme.success;
-              borderColor = theme.success;
-              labelColor = theme.successText;
-            } else if (showFeedback && isChosen) {
-              bg = theme.danger;
-              borderColor = theme.danger;
-              labelColor = theme.dangerText;
-            } else if (isChosen) {
-              borderColor = accent;
-            }
-            return (
-              <Text
-                key={choice.id}
-                onPress={() => onChoose(choice.id)}
-                style={[styles.choice, { backgroundColor: bg, borderColor, color: labelColor }]}>
-                {choice.label}
-              </Text>
-            );
-          })}
-        </View>
+        item.choices.some((c) => c.figure) ? (
+          <View style={styles.choiceGridVisual}>
+            {item.choices.map((choice) => {
+              const isCorrect = choice.id === item.correctChoiceId;
+              const isChosen = choice.id === chosenId;
+              let borderColor = theme.border;
+              let bg = theme.surface;
+              if (showFeedback && isCorrect) {
+                borderColor = theme.success;
+                bg = theme.surfaceAlt;
+              } else if (showFeedback && isChosen) {
+                borderColor = theme.danger;
+                bg = theme.surfaceAlt;
+              } else if (isChosen) {
+                borderColor = accent;
+              }
+              return (
+                <Pressable
+                  key={choice.id}
+                  onPress={() => onChoose(choice.id)}
+                  style={[styles.choiceCard, { borderColor, backgroundColor: bg }]}>
+                  {choice.figure ? <Figure spec={choice.figure} accent={theme.tint} size={116} /> : null}
+                  <Text style={[styles.choiceBadge, { color: theme.textSecondary }]}>{choice.label}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        ) : (
+          <View style={styles.choiceGrid}>
+            {item.choices.map((choice) => {
+              const isCorrect = choice.id === item.correctChoiceId;
+              const isChosen = choice.id === chosenId;
+              let bg = theme.surface;
+              let borderColor = theme.border;
+              let labelColor = theme.text;
+              if (showFeedback && isCorrect) {
+                bg = theme.success;
+                borderColor = theme.success;
+                labelColor = theme.successText;
+              } else if (showFeedback && isChosen) {
+                bg = theme.danger;
+                borderColor = theme.danger;
+                labelColor = theme.dangerText;
+              } else if (isChosen) {
+                borderColor = accent;
+              }
+              return (
+                <Text
+                  key={choice.id}
+                  onPress={() => onChoose(choice.id)}
+                  style={[styles.choice, { backgroundColor: bg, borderColor, color: labelColor }]}>
+                  {choice.label}
+                </Text>
+              );
+            })}
+          </View>
+        )
       ) : (
         <View style={styles.numericBlock}>
           <TextInput
@@ -472,6 +506,7 @@ const styles = StyleSheet.create({
   introLabel: { marginTop: Spacing.sm },
   promptBlock: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: Spacing.md },
   prompt: { fontSize: 38, fontWeight: '800', textAlign: 'center' },
+  promptSmall: { fontSize: 18, fontWeight: '700', textAlign: 'center' },
   hint: { fontSize: 14, textAlign: 'center' },
   feedback: { fontSize: 16, fontWeight: '700', textAlign: 'center', minHeight: 22 },
   feedbackSpacer: { minHeight: 22 },
@@ -487,6 +522,17 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     overflow: 'hidden',
   },
+  choiceGridVisual: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: Spacing.md },
+  choiceCard: {
+    width: '47%',
+    flexGrow: 1,
+    aspectRatio: 1,
+    borderWidth: 2,
+    borderRadius: Radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  choiceBadge: { position: 'absolute', top: 6, left: 10, fontSize: 13, fontWeight: '800' },
   numericBlock: { gap: Spacing.md },
   numericInput: {
     borderWidth: 1.5,

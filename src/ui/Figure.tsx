@@ -1,8 +1,19 @@
+import { Fragment } from 'react';
 import { View } from 'react-native';
-import Svg, { Circle, Line, Path, Polygon, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Line, Path, Polygon, Rect, Text as SvgText } from 'react-native-svg';
 
-import type { FigureSpec, GridPoint } from '@/types';
+import type { FigureSpec, GridPoint, NetCellSpec } from '@/types';
 import { useTheme } from '@/hooks/use-theme';
+
+/** Distinct color + letter per cube face symbol (0..5). */
+const SYMBOLS: { color: string; letter: string }[] = [
+  { color: '#3C82F6', letter: 'A' },
+  { color: '#F59E0B', letter: 'B' },
+  { color: '#22C55E', letter: 'C' },
+  { color: '#A855F7', letter: 'D' },
+  { color: '#EF4444', letter: 'E' },
+  { color: '#14B8A6', letter: 'F' },
+];
 
 /** Renders the optional visual that accompanies a generated item. */
 export function Figure({ spec, accent, size = 180 }: { spec: FigureSpec; accent?: string; size?: number }) {
@@ -11,6 +22,15 @@ export function Figure({ spec, accent, size = 180 }: { spec: FigureSpec; accent?
   }
   if (spec.type === 'grid') {
     return <GridFigure cells={spec.cells} points={spec.points} arrow={spec.arrow} accent={accent} size={size} />;
+  }
+  if (spec.type === 'net') {
+    return <NetFigure cols={spec.cols} rows={spec.rows} cells={spec.cells} size={size} />;
+  }
+  if (spec.type === 'cube') {
+    return <CubeFigure top={spec.top} left={spec.left} right={spec.right} size={size} />;
+  }
+  if (spec.type === 'shape2d') {
+    return <Shape2dFigure cols={spec.cols} rows={spec.rows} cells={spec.cells} accent={accent} size={size} />;
   }
   return null;
 }
@@ -202,5 +222,92 @@ function Arrow({ x1, y1, x2, y2, color }: { x1: number; y1: number; x2: number; 
       <Line x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth={2} strokeLinecap="round" />
       <Polygon points={`${x2},${y2} ${lx.toFixed(1)},${ly.toFixed(1)} ${rx.toFixed(1)},${ry.toFixed(1)}`} fill={color} />
     </>
+  );
+}
+
+function NetFigure({ cols, rows, cells, size }: { cols: number; rows: number; cells: NetCellSpec[]; size: number }) {
+  const theme = useTheme();
+  const pad = 6;
+  const cell = (size - pad * 2) / Math.max(cols, rows);
+  const ox = pad + (size - pad * 2 - cell * cols) / 2;
+  const oy = pad + (size - pad * 2 - cell * rows) / 2;
+  return (
+    <View style={{ alignItems: 'center' }}>
+      <Svg width={size} height={size}>
+        {cells.map((c, i) => {
+          const sym = SYMBOLS[c.sym % SYMBOLS.length];
+          const x = ox + c.x * cell;
+          const y = oy + c.y * cell;
+          return (
+            <Fragment key={i}>
+              <Rect x={x} y={y} width={cell} height={cell} fill={sym.color} stroke={theme.background} strokeWidth={2} rx={4} />
+              <SvgText x={x + cell / 2} y={y + cell / 2 + cell * 0.16} fontSize={cell * 0.42} fontWeight="800" fill="#FFFFFF" textAnchor="middle">
+                {sym.letter}
+              </SvgText>
+            </Fragment>
+          );
+        })}
+      </Svg>
+    </View>
+  );
+}
+
+function CubeFigure({ top, left, right, size }: { top: number; left: number; right: number; size: number }) {
+  const cx = size / 2;
+  const cy = size / 2;
+  const a = size * 0.33;
+  const topPts = `${cx},${cy - a} ${cx + a},${cy - a / 2} ${cx},${cy} ${cx - a},${cy - a / 2}`;
+  const leftPts = `${cx - a},${cy - a / 2} ${cx},${cy} ${cx},${cy + a} ${cx - a},${cy + a / 2}`;
+  const rightPts = `${cx},${cy} ${cx + a},${cy - a / 2} ${cx + a},${cy + a / 2} ${cx},${cy + a}`;
+  const face = (sym: number) => SYMBOLS[sym % SYMBOLS.length];
+  const fs = size * 0.16;
+  return (
+    <View style={{ alignItems: 'center' }}>
+      <Svg width={size} height={size}>
+        <Polygon points={topPts} fill={face(top).color} stroke="#0B1220" strokeWidth={2} />
+        <Polygon points={leftPts} fill={face(left).color} stroke="#0B1220" strokeWidth={2} />
+        <Polygon points={rightPts} fill={face(right).color} stroke="#0B1220" strokeWidth={2} />
+        {/* shading for depth */}
+        <Polygon points={leftPts} fill="#000000" opacity={0.12} />
+        <Polygon points={rightPts} fill="#000000" opacity={0.22} />
+        <SvgText x={cx} y={cy - a / 2 + fs / 2} fontSize={fs} fontWeight="800" fill="#FFFFFF" textAnchor="middle">
+          {face(top).letter}
+        </SvgText>
+        <SvgText x={cx - a / 2} y={cy + a / 4 + fs / 2} fontSize={fs} fontWeight="800" fill="#FFFFFF" textAnchor="middle">
+          {face(left).letter}
+        </SvgText>
+        <SvgText x={cx + a / 2} y={cy + a / 4 + fs / 2} fontSize={fs} fontWeight="800" fill="#FFFFFF" textAnchor="middle">
+          {face(right).letter}
+        </SvgText>
+      </Svg>
+    </View>
+  );
+}
+
+function Shape2dFigure({ cols, rows, cells, accent, size }: { cols: number; rows: number; cells: { x: number; y: number }[]; accent?: string; size: number }) {
+  const theme = useTheme();
+  const fill = accent ?? theme.tint;
+  const pad = 8;
+  const cell = (size - pad * 2) / Math.max(cols, rows);
+  const ox = pad + (size - pad * 2 - cell * cols) / 2;
+  const oy = pad + (size - pad * 2 - cell * rows) / 2;
+  return (
+    <View style={{ alignItems: 'center' }}>
+      <Svg width={size} height={size}>
+        {cells.map((c, i) => (
+          <Rect
+            key={i}
+            x={ox + c.x * cell}
+            y={oy + c.y * cell}
+            width={cell}
+            height={cell}
+            fill={fill}
+            stroke={theme.background}
+            strokeWidth={2}
+            rx={3}
+          />
+        ))}
+      </Svg>
+    </View>
   );
 }

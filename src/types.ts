@@ -17,6 +17,8 @@ export type AnswerMode = 'choice' | 'numeric';
 export interface Choice {
   id: string;
   label: string;
+  /** Optional visual rendered instead of plain text (spatial exercises). */
+  figure?: FigureSpec;
 }
 
 /**
@@ -29,6 +31,13 @@ export interface GridPoint {
   label?: string;
   /** 'a' = primary (you/aircraft), 'b' = target. */
   role?: 'a' | 'b';
+}
+
+/** A filled cell carrying a symbol index (0..5) — used by cube nets. */
+export interface NetCellSpec {
+  x: number;
+  y: number;
+  sym: number;
 }
 
 export type FigureSpec =
@@ -46,6 +55,27 @@ export type FigureSpec =
       points: GridPoint[];
       /** Draw an arrow from the first to the second point. */
       arrow?: boolean;
+    }
+  | {
+      /** 2D cube net (hexomino) with symbol-bearing cells. */
+      type: 'net';
+      cols: number;
+      rows: number;
+      cells: NetCellSpec[];
+    }
+  | {
+      /** Isometric cube showing three faces by symbol index. */
+      type: 'cube';
+      top: number;
+      left: number;
+      right: number;
+    }
+  | {
+      /** A polyomino (filled cells) on a grid, for mental rotation. */
+      type: 'shape2d';
+      cols: number;
+      rows: number;
+      cells: { x: number; y: number }[];
     };
 
 /**
@@ -66,8 +96,10 @@ export interface GeneratedItem {
   answerLabel: string;
   /** Optional method hint surfaced under the prompt. */
   hint?: string;
-  /** Optional visual aid. */
+  /** Optional visual aid shown with the prompt. */
   figure?: FigureSpec;
+  /** Optional larger visual shown above the prompt (e.g. a cube net to fold). */
+  promptFigure?: FigureSpec;
   /**
    * Optional sub-type tag (e.g. '+', 'fraction', 'reciprocal'). The session
    * builder uses it to spread item types and avoid repetition within a session.

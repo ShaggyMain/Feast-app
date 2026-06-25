@@ -13,6 +13,8 @@ import { generatePercent } from '@/exercises/math/percent';
 import { generateHeading } from '@/exercises/math/heading';
 import { generateOrientation } from '@/exercises/spatial/orientation';
 import { generateCoords } from '@/exercises/spatial/coords';
+import { generateCube } from '@/exercises/spatial/cube';
+import { generateRotation } from '@/exercises/spatial/rotation';
 import { generateSeries } from '@/exercises/reaction/series';
 
 export interface ModuleMeta {
@@ -137,6 +139,24 @@ export const EXERCISES: ExerciseDef[] = [
       ],
     },
     generate: generateCoords,
+  },
+  {
+    id: 'spatial-rotation',
+    module: 'spatial',
+    title: 'Rotacja figur',
+    description: 'Wybierz kształt, który jest obrotem figury wzorcowej (uwaga na odbicia).',
+    timePerItemSec: 35,
+    itemsPerSession: 8,
+    generate: generateRotation,
+  },
+  {
+    id: 'spatial-cube',
+    module: 'spatial',
+    title: 'Składanie kostki',
+    description: 'Złóż siatkę w sześcian i wskaż poprawny widok 3D. Najtrudniejsze.',
+    timePerItemSec: 45,
+    itemsPerSession: 6,
+    generate: generateCube,
   },
   {
     id: 'react-simple',
