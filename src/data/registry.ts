@@ -216,8 +216,8 @@ export const EXERCISES: ExerciseDef[] = [
   {
     id: 'mem-radar',
     module: 'memory',
-    title: 'Radar (DART) — MVP',
-    description: 'Sprowadzaj samoloty do lądowania dotykiem i utrzymuj separację w czasie rzeczywistym.',
+    title: 'Radar (DART)',
+    description: 'Etap 2 FEAST: prowadź samoloty do bramek wyjściowych w oknie ETA, wydając komendy kursu i prędkości, i utrzymuj separację. Wynik w skali stanina 1–9.',
     timePerItemSec: 0,
     itemsPerSession: 0,
     runner: 'radar',

@@ -6,7 +6,7 @@ import { ReactionExercise } from '@/exercises/reaction/ReactionExercise';
 import { MemoryExercise } from '@/exercises/memory/MemoryExercise';
 import { NBackExercise } from '@/exercises/memory/NBackExercise';
 import { MultipassExercise } from '@/exercises/memory/MultipassExercise';
-import { RadarExercise } from '@/exercises/memory/radar/RadarExercise';
+import { RadarExercise } from '@/exercises/radar/RadarExercise';
 
 export default function ExerciseScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
