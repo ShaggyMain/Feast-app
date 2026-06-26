@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { Spacing } from '@/constants/theme';
 import { exercisesForModule, getModule } from '@/data/registry';
 import { useTheme } from '@/hooks/use-theme';
+import { useT } from '@/i18n/useT';
 import { useResultsStore } from '@/store/results';
 import { exerciseStats } from '@/store/selectors';
 import { Card } from '@/ui/Card';
@@ -14,47 +15,47 @@ import { AppText } from '@/ui/Text';
 export default function ModuleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const t = useT();
   const moduleMeta = getModule(id ?? '');
   const exercises = exercisesForModule(id ?? '');
   const results = useResultsStore((s) => s.results);
 
   return (
     <Screen>
-      <Stack.Screen options={{ title: moduleMeta?.title ?? 'Moduł' }} />
+      <Stack.Screen options={{ title: moduleMeta ? t(moduleMeta.title) : t('nav.module') }} />
 
       <AppText variant="bodyMuted">
-        {moduleMeta ? moduleMeta.subtitle : 'Nie znaleziono modułu.'}
+        {moduleMeta ? t(moduleMeta.subtitle) : t('module.notFound')}
       </AppText>
 
       {exercises.length === 0 ? (
         <Card>
-          <AppText variant="subtitle">Ćwiczenia w przygotowaniu</AppText>
-          <AppText variant="bodyMuted">
-            Ten moduł pojawi się w kolejnych kamieniach milowych. Zacznij od modułu „Matematyka pod
-            czas” lub od „Szybki trening” na ekranie głównym.
-          </AppText>
+          <AppText variant="subtitle">{t('module.soonTitle')}</AppText>
+          <AppText variant="bodyMuted">{t('module.soonBody')}</AppText>
         </Card>
       ) : (
         exercises.map((exercise) => {
           const stats = exerciseStats(results, exercise.id);
           return (
             <Card key={exercise.id} accent={moduleMeta?.color}>
-              <AppText variant="subtitle">{exercise.title}</AppText>
-              <AppText variant="bodyMuted">{exercise.description}</AppText>
+              <AppText variant="subtitle">{t(exercise.title)}</AppText>
+              <AppText variant="bodyMuted">{t(exercise.description)}</AppText>
               <View style={styles.metaRow}>
                 <AppText variant="caption" color={moduleMeta?.color}>
-                  {stats ? `Rekord: ${stats.bestScore} · prób: ${stats.attempts}` : 'Brak prób'}
+                  {stats
+                    ? t('module.record', { score: stats.bestScore, n: stats.attempts })
+                    : t('module.noTries')}
                 </AppText>
                 <AppText variant="caption">
                   {exercise.timePerItemSec > 0
-                    ? `${exercise.timePerItemSec}s · ${exercise.itemsPerSession} pyt.`
+                    ? t('module.timed', { sec: exercise.timePerItemSec, n: exercise.itemsPerSession })
                     : exercise.itemsPerSession > 0
-                      ? `${exercise.itemsPerSession} prób`
-                      : 'sesja na czas'}
+                      ? t('module.tries', { n: exercise.itemsPerSession })
+                      : t('module.timedSession')}
                 </AppText>
               </View>
               <PrimaryButton
-                label="Start"
+                label={t('common.start')}
                 onPress={() => router.push(`/exercise/${exercise.id}`)}
                 style={styles.startBtn}
               />

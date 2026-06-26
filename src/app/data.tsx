@@ -3,6 +3,7 @@ import { Alert, Share, StyleSheet, TextInput, View } from 'react-native';
 
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useT } from '@/i18n/useT';
 import { useResultsStore } from '@/store/results';
 import { parseResults, serializeResults } from '@/store/io';
 import { Card } from '@/ui/Card';
@@ -13,6 +14,7 @@ import { AppText } from '@/ui/Text';
 
 export default function DataScreen() {
   const theme = useTheme();
+  const t = useT();
   const results = useResultsStore((s) => s.results);
   const importResults = useResultsStore((s) => s.importResults);
   const clearAll = useResultsStore((s) => s.clearAll);
@@ -29,34 +31,31 @@ export default function DataScreen() {
   const onImport = () => {
     const parsed = parseResults(text.trim());
     if (!parsed) {
-      Alert.alert('Błąd importu', 'To nie wygląda na poprawne dane FEAST (oczekiwany JSON).');
+      Alert.alert(t('data.importErrTitle'), t('data.importErrBody'));
       return;
     }
     const added = importResults(parsed);
-    Alert.alert('Import zakończony', `Dodano: ${added}. Pominięto duplikaty: ${parsed.length - added}.`);
+    Alert.alert(t('data.importOkTitle'), t('data.importOkBody', { added, dup: parsed.length - added }));
     setText('');
   };
 
   const onClear = () =>
-    Alert.alert('Wyczyścić dane?', 'Usunie wszystkie zapisane wyniki na tym urządzeniu.', [
-      { text: 'Anuluj', style: 'cancel' },
-      { text: 'Wyczyść', style: 'destructive', onPress: () => clearAll() },
+    Alert.alert(t('data.clearTitle'), t('data.clearBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('common.clear'), style: 'destructive', onPress: () => clearAll() },
     ]);
 
   return (
     <Screen>
       <View style={styles.statRow}>
-        <Stat label="Zapisane wyniki" value={String(results.length)} accent={theme.tint} />
+        <Stat label={t('data.saved')} value={String(results.length)} accent={theme.tint} />
       </View>
 
       <Card>
-        <AppText variant="subtitle">Eksport (kopia zapasowa)</AppText>
-        <AppText variant="bodyMuted">
-          Udostępnij wyniki jako JSON — zapisz w Plikach albo wyślij sobie, by przenieść na inny
-          telefon.
-        </AppText>
+        <AppText variant="subtitle">{t('data.exportTitle')}</AppText>
+        <AppText variant="bodyMuted">{t('data.exportBody')}</AppText>
         <PrimaryButton
-          label="Eksportuj (udostępnij)"
+          label={t('data.exportBtn')}
           onPress={onExport}
           disabled={results.length === 0}
           style={styles.mt}
@@ -64,20 +63,20 @@ export default function DataScreen() {
       </Card>
 
       <Card>
-        <AppText variant="subtitle">Import</AppText>
-        <AppText variant="bodyMuted">Wklej wyeksportowany JSON, aby scalić wyniki (duplikaty pomijane).</AppText>
+        <AppText variant="subtitle">{t('data.importTitle')}</AppText>
+        <AppText variant="bodyMuted">{t('data.importBody')}</AppText>
         <TextInput
           multiline
           value={text}
           onChangeText={setText}
-          placeholder="Wklej tutaj dane JSON…"
+          placeholder={t('data.importPlaceholder')}
           placeholderTextColor={theme.textSecondary}
           style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.surface }]}
         />
-        <PrimaryButton label="Importuj" variant="secondary" onPress={onImport} disabled={text.trim() === ''} />
+        <PrimaryButton label={t('data.importBtn')} variant="secondary" onPress={onImport} disabled={text.trim() === ''} />
       </Card>
 
-      <PrimaryButton label="Wyczyść wszystkie dane" variant="ghost" onPress={onClear} />
+      <PrimaryButton label={t('data.clearBtn')} variant="ghost" onPress={onClear} />
     </Screen>
   );
 }

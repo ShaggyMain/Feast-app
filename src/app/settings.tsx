@@ -6,63 +6,77 @@ import { Spacing } from '@/constants/theme';
 import type { Difficulty } from '@/types';
 import { useTheme } from '@/hooks/use-theme';
 import { type SessionLength, useSettingsStore } from '@/store/settings';
+import type { Lang } from '@/i18n';
+import { useT } from '@/i18n/useT';
 import { Card } from '@/ui/Card';
 import { PrimaryButton } from '@/ui/PrimaryButton';
 import { Screen } from '@/ui/Screen';
 import { SegmentedControl } from '@/ui/SegmentedControl';
 import { AppText } from '@/ui/Text';
 
-const LEVEL_OPTIONS: { value: Difficulty; label: string }[] = [
-  { value: 'easy', label: 'Łatwy' },
-  { value: 'medium', label: 'Średni' },
-  { value: 'hard', label: 'Trudny' },
-];
-
-const LENGTH_OPTIONS: { value: SessionLength; label: string }[] = [
-  { value: 'short', label: 'Krótka' },
-  { value: 'normal', label: 'Normalna' },
-  { value: 'long', label: 'Długa' },
-];
-
 export default function SettingsScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const t = useT();
   const defaultLevel = useSettingsStore((s) => s.defaultLevel);
   const sessionLength = useSettingsStore((s) => s.sessionLength);
+  const language = useSettingsStore((s) => s.language);
   const haptics = useSettingsStore((s) => s.haptics);
   const sound = useSettingsStore((s) => s.sound);
   const adaptive = useSettingsStore((s) => s.adaptive);
   const setDefaultLevel = useSettingsStore((s) => s.setDefaultLevel);
   const setSessionLength = useSettingsStore((s) => s.setSessionLength);
+  const setLanguage = useSettingsStore((s) => s.setLanguage);
   const setHaptics = useSettingsStore((s) => s.setHaptics);
   const setSound = useSettingsStore((s) => s.setSound);
   const setAdaptive = useSettingsStore((s) => s.setAdaptive);
 
+  const levelOptions: { value: Difficulty; label: string }[] = [
+    { value: 'easy', label: t('level.easy') },
+    { value: 'medium', label: t('level.medium') },
+    { value: 'hard', label: t('level.hard') },
+  ];
+  const lengthOptions: { value: SessionLength; label: string }[] = [
+    { value: 'short', label: t('length.short') },
+    { value: 'normal', label: t('length.normal') },
+    { value: 'long', label: t('length.long') },
+  ];
+  const langOptions: { value: Lang; label: string }[] = [
+    { value: 'pl', label: 'Polski' },
+    { value: 'en', label: 'English' },
+  ];
+
   return (
     <Screen>
       <Card>
-        <AppText variant="subtitle">Domyślny poziom</AppText>
-        <AppText variant="bodyMuted">Od tego poziomu startują nowe ćwiczenia.</AppText>
+        <AppText variant="subtitle">{t('settings.langTitle')}</AppText>
+        <AppText variant="bodyMuted">{t('settings.langSub')}</AppText>
         <View style={styles.control}>
-          <SegmentedControl value={defaultLevel} options={LEVEL_OPTIONS} onChange={setDefaultLevel} />
+          <SegmentedControl value={language} options={langOptions} onChange={setLanguage} accent={theme.tint} />
         </View>
       </Card>
 
       <Card>
-        <AppText variant="subtitle">Długość sesji</AppText>
-        <AppText variant="bodyMuted">Liczba pytań w ćwiczeniach z pytaniami (krótsza/dłuższa).</AppText>
+        <AppText variant="subtitle">{t('settings.levelTitle')}</AppText>
+        <AppText variant="bodyMuted">{t('settings.levelSub')}</AppText>
         <View style={styles.control}>
-          <SegmentedControl value={sessionLength} options={LENGTH_OPTIONS} onChange={setSessionLength} />
+          <SegmentedControl value={defaultLevel} options={levelOptions} onChange={setDefaultLevel} />
+        </View>
+      </Card>
+
+      <Card>
+        <AppText variant="subtitle">{t('settings.lengthTitle')}</AppText>
+        <AppText variant="bodyMuted">{t('settings.lengthSub')}</AppText>
+        <View style={styles.control}>
+          <SegmentedControl value={sessionLength} options={lengthOptions} onChange={setSessionLength} />
         </View>
       </Card>
 
       <Card>
         <View style={styles.switchRow}>
           <View style={styles.switchText}>
-            <AppText variant="subtitle">Adaptacyjna trudność</AppText>
-            <AppText variant="bodyMuted">
-              Proponuje poziom startowy wg ostatnich wyników (możesz go zmienić przed startem).
-            </AppText>
+            <AppText variant="subtitle">{t('settings.adaptiveTitle')}</AppText>
+            <AppText variant="bodyMuted">{t('settings.adaptiveSub')}</AppText>
           </View>
           <Switch
             value={adaptive}
@@ -75,8 +89,8 @@ export default function SettingsScreen() {
       <Card>
         <View style={styles.switchRow}>
           <View style={styles.switchText}>
-            <AppText variant="subtitle">Wibracje (haptyka)</AppText>
-            <AppText variant="bodyMuted">Krótka wibracja przy odpowiedzi.</AppText>
+            <AppText variant="subtitle">{t('settings.hapticsTitle')}</AppText>
+            <AppText variant="bodyMuted">{t('settings.hapticsSub')}</AppText>
           </View>
           <Switch
             value={haptics}
@@ -89,8 +103,8 @@ export default function SettingsScreen() {
       <Card>
         <View style={styles.switchRow}>
           <View style={styles.switchText}>
-            <AppText variant="subtitle">Dźwięk</AppText>
-            <AppText variant="bodyMuted">Krótki sygnał przy poprawnej i błędnej odpowiedzi.</AppText>
+            <AppText variant="subtitle">{t('settings.soundTitle')}</AppText>
+            <AppText variant="bodyMuted">{t('settings.soundSub')}</AppText>
           </View>
           <Switch
             value={sound}
@@ -101,16 +115,14 @@ export default function SettingsScreen() {
       </Card>
 
       <Card>
-        <AppText variant="subtitle">Motyw</AppText>
-        <AppText variant="bodyMuted">
-          Jasny/ciemny dopasowuje się automatycznie do ustawień telefonu.
-        </AppText>
+        <AppText variant="subtitle">{t('settings.themeTitle')}</AppText>
+        <AppText variant="bodyMuted">{t('settings.themeSub')}</AppText>
       </Card>
 
-      <PrimaryButton label="Dane: eksport / import / kopia" variant="secondary" onPress={() => router.push('/data')} />
+      <PrimaryButton label={t('settings.dataBtn')} variant="secondary" onPress={() => router.push('/data')} />
 
       <AppText variant="caption" style={styles.about}>
-        FEAST Trainer v{Constants.expoConfig?.version ?? '1.0.0'} · offline · bez backendu
+        {t('settings.about', { v: Constants.expoConfig?.version ?? '1.0.0' })}
       </AppText>
     </Screen>
   );

@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Radius, Spacing } from '@/constants/theme';
 import { EXERCISES, MODULES, exercisesForModule } from '@/data/registry';
 import { useTheme } from '@/hooks/use-theme';
+import { useT } from '@/i18n/useT';
 import { useResultsStore } from '@/store/results';
 import { overallStats } from '@/store/selectors';
 import { useSettingsStore } from '@/store/settings';
@@ -17,6 +18,7 @@ import { AppText } from '@/ui/Text';
 export default function Home() {
   const theme = useTheme();
   const router = useRouter();
+  const t = useT();
   const results = useResultsStore((s) => s.results);
   const stats = overallStats(results);
   const hasHydrated = useSettingsStore((s) => s.hasHydrated);
@@ -36,23 +38,21 @@ export default function Home() {
   return (
     <Screen>
       <View style={styles.hero}>
-        <AppText variant="hero">Trenuj jak kontroler</AppText>
-        <AppText variant="bodyMuted">
-          Krótkie ćwiczenia na czas — liczy się szybkość i dokładność. Bez kary za błędy.
-        </AppText>
+        <AppText variant="hero">{t('home.heroTitle')}</AppText>
+        <AppText variant="bodyMuted">{t('home.heroSub')}</AppText>
       </View>
 
       <View style={styles.statRow}>
-        <Stat label="Sesje" value={String(stats.totalSessions)} />
-        <Stat label="Śr. trafność" value={`${Math.round(stats.avgAccuracy * 100)}%`} />
-        <Stat label="Pytania" value={String(stats.totalItems)} />
+        <Stat label={t('home.sessions')} value={String(stats.totalSessions)} />
+        <Stat label={t('home.avgAcc')} value={`${Math.round(stats.avgAccuracy * 100)}%`} />
+        <Stat label={t('home.questions')} value={String(stats.totalItems)} />
       </View>
 
       <Card accent={theme.tint} onPress={quickStart}>
         <View style={styles.ctaRow}>
           <View style={styles.flex}>
-            <AppText variant="subtitle">Szybki trening</AppText>
-            <AppText variant="caption">Losowe ćwiczenie z matematyki</AppText>
+            <AppText variant="subtitle">{t('home.quickTitle')}</AppText>
+            <AppText variant="caption">{t('home.quickSub')}</AppText>
           </View>
           <AppText variant="hero" color={theme.tint}>
             ▶
@@ -63,8 +63,8 @@ export default function Home() {
       <Card accent={theme.warning} onPress={() => router.push('/exam')}>
         <View style={styles.ctaRow}>
           <View style={styles.flex}>
-            <AppText variant="subtitle">Tryb egzaminacyjny</AppText>
-            <AppText variant="caption">20 pytań z różnych modułów, bez przerw</AppText>
+            <AppText variant="subtitle">{t('home.examTitle')}</AppText>
+            <AppText variant="caption">{t('home.examSub')}</AppText>
           </View>
           <AppText variant="hero" color={theme.warning}>
             ★
@@ -73,7 +73,7 @@ export default function Home() {
       </Card>
 
       <AppText variant="label" style={styles.section}>
-        MODUŁY
+        {t('home.modules')}
       </AppText>
 
       {MODULES.map((module) => {
@@ -85,11 +85,11 @@ export default function Home() {
                 <Text style={styles.emoji}>{module.emoji}</Text>
               </View>
               <View style={styles.tileText}>
-                <AppText variant="subtitle">{module.title}</AppText>
-                <AppText variant="caption">{module.subtitle}</AppText>
+                <AppText variant="subtitle">{t(module.title)}</AppText>
+                <AppText variant="caption">{t(module.subtitle)}</AppText>
               </View>
               <AppText variant="caption" color={module.color}>
-                {count > 0 ? `${count} ćw.` : 'Wkrótce'}
+                {count > 0 ? t('home.exCount', { n: count }) : t('home.soon')}
               </AppText>
             </View>
           </Card>
@@ -97,10 +97,10 @@ export default function Home() {
       })}
 
       <View style={styles.actions}>
-        <PrimaryButton label="Postępy (wykresy)" variant="secondary" onPress={() => router.push('/progress')} />
-        <PrimaryButton label="Statystyki" variant="ghost" onPress={() => router.push('/stats')} />
-        <PrimaryButton label="Jak działa FEAST" variant="ghost" onPress={() => router.push('/onboarding')} />
-        <PrimaryButton label="Ustawienia" variant="ghost" onPress={() => router.push('/settings')} />
+        <PrimaryButton label={t('home.progress')} variant="secondary" onPress={() => router.push('/progress')} />
+        <PrimaryButton label={t('home.stats')} variant="ghost" onPress={() => router.push('/stats')} />
+        <PrimaryButton label={t('home.howFeast')} variant="ghost" onPress={() => router.push('/onboarding')} />
+        <PrimaryButton label={t('home.settings')} variant="ghost" onPress={() => router.push('/settings')} />
       </View>
     </Screen>
   );

@@ -24,13 +24,10 @@ import { PrimaryButton } from '@/ui/PrimaryButton';
 import { SegmentedControl } from '@/ui/SegmentedControl';
 import { Stat } from '@/ui/Stat';
 import { AppText } from '@/ui/Text';
+import { useT } from '@/i18n/useT';
 
 const EXAM_COUNT = 20;
-const LEVEL_OPTIONS: { value: Difficulty; label: string }[] = [
-  { value: 'easy', label: 'Łatwy' },
-  { value: 'medium', label: 'Średni' },
-  { value: 'hard', label: 'Trudny' },
-];
+const LEVELS: Difficulty[] = ['easy', 'medium', 'hard'];
 
 interface Entry {
   outcome: ItemOutcome;
@@ -41,6 +38,7 @@ interface Entry {
 export function ExamRunner() {
   const theme = useTheme();
   const router = useRouter();
+  const t = useT();
   useKeepAwake();
 
   const addResult = useResultsStore((s) => s.addResult);
@@ -122,20 +120,18 @@ export function ExamRunner() {
   }, []);
 
   if (phase === 'intro') {
+    const levelOptions = LEVELS.map((l) => ({ value: l, label: t(`level.${l}`) }));
     return (
       <Screen>
-        <AppText variant="title">Tryb egzaminacyjny</AppText>
-        <AppText variant="bodyMuted">
-          {EXAM_COUNT} pytań z różnych modułów, jedno po drugim, bez przerw i bez podpowiedzi o
-          ćwiczeniu — symulacja zmęczenia jak na FEAST.
-        </AppText>
+        <AppText variant="title">{t('exam.introTitle')}</AppText>
+        <AppText variant="bodyMuted">{t('exam.introBody', { n: EXAM_COUNT })}</AppText>
         <AppText variant="label" style={styles.mt}>
-          POZIOM TRUDNOŚCI
+          {t('runner.levelLabel')}
         </AppText>
-        <SegmentedControl value={level} options={LEVEL_OPTIONS} onChange={setLevel} accent={theme.tint} />
+        <SegmentedControl value={level} options={levelOptions} onChange={setLevel} accent={theme.tint} />
         <View style={styles.actions}>
-          <PrimaryButton label="Start egzaminu" onPress={start} />
-          <PrimaryButton label="Wróć" variant="ghost" onPress={() => router.back()} />
+          <PrimaryButton label={t('exam.startBtn')} onPress={start} />
+          <PrimaryButton label={t('common.back')} variant="ghost" onPress={() => router.back()} />
         </View>
       </Screen>
     );
@@ -155,31 +151,31 @@ export function ExamRunner() {
     }
     return (
       <Screen>
-        <AppText variant="title">Egzamin ukończony</AppText>
+        <AppText variant="title">{t('exam.doneTitle')}</AppText>
         <View style={styles.statRow}>
-          <Stat label="Wynik" value={String(saved.score)} accent={theme.tint} />
-          <Stat label="Trafność" value={`${Math.round(saved.accuracy * 100)}%`} />
-          <Stat label="Śr. czas" value={`${(saved.avgResponseMs / 1000).toFixed(1)}s`} />
+          <Stat label={t('runner.score')} value={String(saved.score)} accent={theme.tint} />
+          <Stat label={t('runner.accuracy')} value={`${Math.round(saved.accuracy * 100)}%`} />
+          <Stat label={t('runner.avgTime')} value={`${(saved.avgResponseMs / 1000).toFixed(1)}s`} />
         </View>
         <AppText variant="label" style={styles.mt}>
-          WG MODUŁU
+          {t('exam.byModule')}
         </AppText>
         {MODULES.filter((m) => byModule[m.id].t > 0).map((m) => (
           <AppText key={m.id} variant="bodyMuted" color={m.color}>
-            {m.title}: {byModule[m.id].c}/{byModule[m.id].t}
+            {t(m.title)}: {byModule[m.id].c}/{byModule[m.id].t}
           </AppText>
         ))}
         <View style={[styles.banner, { backgroundColor: isRecord ? theme.success : theme.surfaceAlt }]}>
           <AppText variant="caption" color={isRecord ? theme.successText : theme.textSecondary}>
             {isRecord
-              ? `Nowy rekord egzaminu! Poprzedni: ${prevBestRef.current}`
-              : `Najlepszy egzamin: ${Math.max(prevBestRef.current, saved.score)}`}
+              ? t('exam.newRecord', { prev: prevBestRef.current })
+              : t('exam.bestExam', { best: Math.max(prevBestRef.current, saved.score) })}
           </AppText>
         </View>
         <View style={styles.actions}>
-          <PrimaryButton label="Jeszcze raz" onPress={start} />
-          <PrimaryButton label="Postępy" variant="secondary" onPress={() => router.push('/progress')} />
-          <PrimaryButton label="Wróć" variant="ghost" onPress={() => router.back()} />
+          <PrimaryButton label={t('common.retry')} onPress={start} />
+          <PrimaryButton label={t('nav.progress')} variant="secondary" onPress={() => router.push('/progress')} />
+          <PrimaryButton label={t('common.back')} variant="ghost" onPress={() => router.back()} />
         </View>
       </Screen>
     );
@@ -193,7 +189,7 @@ export function ExamRunner() {
     <Screen scroll={false}>
       <View style={styles.headerRow}>
         <AppText variant="caption">
-          Egzamin · {Math.min(index + 1, EXAM_COUNT)} / {EXAM_COUNT}
+          {t('exam.progress', { i: Math.min(index + 1, EXAM_COUNT), n: EXAM_COUNT })}
         </AppText>
         <AppText variant="caption" color={theme.success}>
           ✓ {correctSoFar}

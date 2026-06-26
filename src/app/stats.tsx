@@ -3,6 +3,7 @@ import { Alert, StyleSheet, View } from 'react-native';
 import { Spacing } from '@/constants/theme';
 import { EXERCISES, getModule } from '@/data/registry';
 import { useTheme } from '@/hooks/use-theme';
+import { useT } from '@/i18n/useT';
 import { useResultsStore } from '@/store/results';
 import { exerciseStats, overallStats } from '@/store/selectors';
 import { Card } from '@/ui/Card';
@@ -12,6 +13,7 @@ import { Stat } from '@/ui/Stat';
 import { AppText } from '@/ui/Text';
 
 export default function StatsScreen() {
+  const t = useT();
   const results = useResultsStore((s) => s.results);
   const clearAll = useResultsStore((s) => s.clearAll);
   const stats = overallStats(results);
@@ -22,47 +24,45 @@ export default function StatsScreen() {
   })).filter((entry) => entry.stats !== null);
 
   const confirmClear = () => {
-    Alert.alert('Wyczyścić dane?', 'Usunie to wszystkie zapisane wyniki na tym urządzeniu.', [
-      { text: 'Anuluj', style: 'cancel' },
-      { text: 'Wyczyść', style: 'destructive', onPress: () => clearAll() },
+    Alert.alert(t('stats.clearTitle'), t('stats.clearBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('common.clear'), style: 'destructive', onPress: () => clearAll() },
     ]);
   };
 
   return (
     <Screen>
       <View style={styles.statRow}>
-        <Stat label="Sesje" value={String(stats.totalSessions)} />
-        <Stat label="Pytania" value={String(stats.totalItems)} />
-        <Stat label="Śr. trafność" value={`${Math.round(stats.avgAccuracy * 100)}%`} />
+        <Stat label={t('stats.sessions')} value={String(stats.totalSessions)} />
+        <Stat label={t('stats.questions')} value={String(stats.totalItems)} />
+        <Stat label={t('stats.avgAcc')} value={`${Math.round(stats.avgAccuracy * 100)}%`} />
       </View>
 
       {results.length === 0 ? (
         <Card>
-          <AppText variant="subtitle">Brak wyników</AppText>
-          <AppText variant="bodyMuted">
-            Ukończ sesję, aby zobaczyć tu trafność, tempo i najlepsze wyniki.
-          </AppText>
+          <AppText variant="subtitle">{t('stats.noneTitle')}</AppText>
+          <AppText variant="bodyMuted">{t('stats.noneBody')}</AppText>
         </Card>
       ) : (
         <>
           <AppText variant="label" style={styles.section}>
-            WG ĆWICZENIA
+            {t('stats.byExercise')}
           </AppText>
           {played.map(({ exercise, stats: exStats }) => {
             const moduleMeta = getModule(exercise.module);
             return (
               <Card key={exercise.id} accent={moduleMeta?.color}>
-                <AppText variant="subtitle">{exercise.title}</AppText>
+                <AppText variant="subtitle">{t(exercise.title)}</AppText>
                 <View style={styles.exStatRow}>
-                  <Stat label="Rekord" value={String(exStats!.bestScore)} accent={moduleMeta?.color} />
-                  <Stat label="Śr. traf." value={`${Math.round(exStats!.avgAccuracy * 100)}%`} />
-                  <Stat label="Śr. czas" value={`${(exStats!.avgResponseMs / 1000).toFixed(1)}s`} />
-                  <Stat label="Prób" value={String(exStats!.attempts)} />
+                  <Stat label={t('stats.record')} value={String(exStats!.bestScore)} accent={moduleMeta?.color} />
+                  <Stat label={t('stats.avgAccShort')} value={`${Math.round(exStats!.avgAccuracy * 100)}%`} />
+                  <Stat label={t('stats.avgTime')} value={`${(exStats!.avgResponseMs / 1000).toFixed(1)}s`} />
+                  <Stat label={t('stats.tries')} value={String(exStats!.attempts)} />
                 </View>
               </Card>
             );
           })}
-          <PrimaryButton label="Wyczyść dane" variant="ghost" onPress={confirmClear} />
+          <PrimaryButton label={t('stats.clearBtn')} variant="ghost" onPress={confirmClear} />
         </>
       )}
     </Screen>

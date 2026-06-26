@@ -1,6 +1,7 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 
 import { getExercise } from '@/data/registry';
+import { useT } from '@/i18n/useT';
 import { ExerciseRunner } from '@/runner/ExerciseRunner';
 import { ReactionExercise } from '@/exercises/reaction/ReactionExercise';
 import { MemoryExercise } from '@/exercises/memory/MemoryExercise';
@@ -15,6 +16,7 @@ export default function ExerciseScreen() {
   const exerciseId = id ?? '';
   const exercise = getExercise(exerciseId);
   const runner = exercise?.runner ?? 'standard';
+  const t = useT();
 
   function renderRunner() {
     switch (runner) {
@@ -40,7 +42,7 @@ export default function ExerciseScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: exercise?.title ?? 'Ćwiczenie' }} />
+      <Stack.Screen options={{ title: exercise ? t(exercise.title) : t('nav.exercise') }} />
       {renderRunner()}
     </>
   );

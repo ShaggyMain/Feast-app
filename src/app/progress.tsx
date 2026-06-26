@@ -4,6 +4,7 @@ import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { MaxContentWidth, ModuleColors, Spacing } from '@/constants/theme';
 import type { ModuleId } from '@/types';
 import { useTheme } from '@/hooks/use-theme';
+import { useT } from '@/i18n/useT';
 import { useResultsStore } from '@/store/results';
 import { bestScore, dailyStreak, series } from '@/store/selectors';
 import { Screen } from '@/ui/Screen';
@@ -14,19 +15,20 @@ import { LineChart } from '@/ui/Chart';
 
 type Filter = 'all' | ModuleId;
 
-const FILTERS: { value: Filter; label: string }[] = [
-  { value: 'all', label: 'Wsz.' },
-  { value: 'math', label: 'Mat' },
-  { value: 'spatial', label: 'Prze' },
-  { value: 'memory', label: 'Pam' },
-  { value: 'reaction', label: 'Rea' },
-];
-
 export default function ProgressScreen() {
   const theme = useTheme();
+  const t = useT();
   const { width } = useWindowDimensions();
   const results = useResultsStore((s) => s.results);
   const [filter, setFilter] = useState<Filter>('all');
+
+  const FILTERS: { value: Filter; label: string }[] = [
+    { value: 'all', label: t('progress.f.all') },
+    { value: 'math', label: t('progress.f.math') },
+    { value: 'spatial', label: t('progress.f.spatial') },
+    { value: 'memory', label: t('progress.f.memory') },
+    { value: 'reaction', label: t('progress.f.reaction') },
+  ];
 
   const chartW = Math.min(width, MaxContentWidth) - 32 - 24;
   const accent = filter === 'all' ? theme.tint : ModuleColors[filter];
@@ -48,14 +50,14 @@ export default function ProgressScreen() {
       <SegmentedControl value={filter} options={FILTERS} onChange={setFilter} accent={accent} />
 
       <View style={styles.statRow}>
-        <Stat label="Sesje" value={String(sessions)} />
-        <Stat label="Rekord" value={String(best)} accent={accent} />
-        <Stat label="Passa (dni)" value={String(streak)} />
+        <Stat label={t('progress.sessions')} value={String(sessions)} />
+        <Stat label={t('progress.record')} value={String(best)} accent={accent} />
+        <Stat label={t('progress.streak')} value={String(streak)} />
       </View>
 
-      <LineChart label="WYNIK (ostatnie sesje)" data={scoreData} width={chartW} color={accent} />
+      <LineChart label={t('progress.scoreChart')} data={scoreData} width={chartW} color={accent} />
       <LineChart
-        label="TRAFNOŚĆ %"
+        label={t('progress.accChart')}
         data={accData}
         width={chartW}
         color={theme.success}
@@ -64,7 +66,7 @@ export default function ProgressScreen() {
 
       {examBest > 0 ? (
         <View style={[styles.examBox, { backgroundColor: theme.surfaceAlt }]}>
-          <AppText variant="caption">Tryb egzaminacyjny — rekord</AppText>
+          <AppText variant="caption">{t('progress.examRecord')}</AppText>
           <AppText variant="title" color={theme.tint}>
             {examBest}
           </AppText>
@@ -73,7 +75,7 @@ export default function ProgressScreen() {
 
       {sessions === 0 ? (
         <AppText variant="bodyMuted" style={styles.empty}>
-          Ukończ kilka sesji, aby zobaczyć trend wyniku i trafności.
+          {t('progress.empty')}
         </AppText>
       ) : null}
     </Screen>

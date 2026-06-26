@@ -33,14 +33,12 @@ import { Stat } from '@/ui/Stat';
 import { AppText } from '@/ui/Text';
 import { SegmentedControl } from '@/ui/SegmentedControl';
 import { Figure } from '@/ui/Figure';
+import { useT } from '@/i18n/useT';
 
 const FEEDBACK_MS = 650;
 
-const LEVEL_OPTIONS: { value: Difficulty; label: string }[] = [
-  { value: 'easy', label: 'Łatwy' },
-  { value: 'medium', label: 'Średni' },
-  { value: 'hard', label: 'Trudny' },
-];
+const LEVELS: Difficulty[] = ['easy', 'medium', 'hard'];
+const levelLabelKey = (l: Difficulty) => `level.${l}`;
 
 function makeSeed(): number {
   return Math.floor(Math.random() * 1_000_000);
@@ -51,6 +49,7 @@ type Phase = 'intro' | 'playing' | 'done';
 export function ExerciseRunner({ exerciseId }: { exerciseId: string }) {
   const theme = useTheme();
   const router = useRouter();
+  const t = useT();
   useKeepAwake();
 
   const def = useMemo(() => getExercise(exerciseId), [exerciseId]);
@@ -117,8 +116,8 @@ export function ExerciseRunner({ exerciseId }: { exerciseId: string }) {
   if (!def) {
     return (
       <Screen>
-        <AppText variant="title">Nie znaleziono ćwiczenia</AppText>
-        <PrimaryButton label="Wróć" variant="secondary" onPress={() => router.back()} />
+        <AppText variant="title">{t('common.notFound')}</AppText>
+        <PrimaryButton label={t('common.back')} variant="secondary" onPress={() => router.back()} />
       </Screen>
     );
   }
@@ -159,7 +158,7 @@ export function ExerciseRunner({ exerciseId }: { exerciseId: string }) {
     <Screen scroll={false}>
       <View style={styles.headerRow}>
         <AppText variant="caption">
-          Pytanie {Math.min(index + 1, total)} / {total}
+          {t('runner.question', { i: Math.min(index + 1, total), n: total })}
         </AppText>
         <AppText variant="caption" color={theme.success}>
           ✓ {correctSoFar}
@@ -208,24 +207,26 @@ function IntroView({
   onStart: () => void;
   onBack: () => void;
 }) {
+  const t = useT();
+  const levelOptions = LEVELS.map((l) => ({ value: l, label: t(levelLabelKey(l)) }));
   return (
     <Screen>
-      <AppText variant="title">{def.title}</AppText>
-      <AppText variant="bodyMuted">{def.description}</AppText>
+      <AppText variant="title">{t(def.title)}</AppText>
+      <AppText variant="bodyMuted">{t(def.description)}</AppText>
 
       <AppText variant="label" style={styles.introLabel}>
-        POZIOM TRUDNOŚCI
+        {t('runner.levelLabel')}
       </AppText>
-      <SegmentedControl value={level} options={LEVEL_OPTIONS} onChange={onLevel} accent={accent} />
+      <SegmentedControl value={level} options={levelOptions} onChange={onLevel} accent={accent} />
 
       {def.variant ? (
         <>
           <AppText variant="label" style={styles.introLabel}>
-            {def.variant.label}
+            {t(def.variant.label)}
           </AppText>
           <SegmentedControl
             value={variant ?? def.variant.default}
-            options={def.variant.options}
+            options={def.variant.options.map((o) => ({ ...o, label: t(o.label) }))}
             onChange={onVariant}
             accent={accent}
           />
@@ -233,14 +234,14 @@ function IntroView({
       ) : null}
 
       <View style={styles.statRow}>
-        <Stat label="Rekord (poziom)" value={String(bestForLevel)} accent={accent} />
-        <Stat label="Czas / pyt." value={`${def.timePerItemSec}s`} />
-        <Stat label="Pytania" value={String(def.itemsPerSession)} />
+        <Stat label={t('runner.bestLevel')} value={String(bestForLevel)} accent={accent} />
+        <Stat label={t('runner.timePerQ')} value={`${def.timePerItemSec}s`} />
+        <Stat label={t('runner.questions')} value={String(def.itemsPerSession)} />
       </View>
 
       <View style={styles.actions}>
-        <PrimaryButton label="Start" onPress={onStart} />
-        <PrimaryButton label="Wróć" variant="ghost" onPress={onBack} />
+        <PrimaryButton label={t('common.start')} onPress={onStart} />
+        <PrimaryButton label={t('common.back')} variant="ghost" onPress={onBack} />
       </View>
     </Screen>
   );
@@ -257,6 +258,7 @@ export interface PlayItemProps {
 
 export function PlayItem({ item, timeLimitMs, accent, onComplete }: PlayItemProps) {
   const theme = useTheme();
+  const t = useT();
   const hapticsOn = useSettingsStore((s) => s.haptics);
   const soundOn = useSettingsStore((s) => s.sound);
   const startRef = useRef(Date.now());
@@ -346,10 +348,10 @@ export function PlayItem({ item, timeLimitMs, accent, onComplete }: PlayItemProp
       {showFeedback ? (
         <Text style={[styles.feedback, { color: outcome?.correct ? theme.success : theme.danger }]}>
           {outcome?.correct
-            ? 'Dobrze!'
+            ? t('runner.correct')
             : outcome?.answered
-              ? `Błąd — poprawnie: ${item.answerLabel}`
-              : `Czas minął — poprawnie: ${item.answerLabel}`}
+              ? t('runner.wrong', { ans: item.answerLabel })
+              : t('runner.timeout', { ans: item.answerLabel })}
         </Text>
       ) : (
         <View style={styles.feedbackSpacer} />
@@ -421,7 +423,7 @@ export function PlayItem({ item, timeLimitMs, accent, onComplete }: PlayItemProp
             editable={!showFeedback}
             keyboardType="numbers-and-punctuation"
             inputMode="numeric"
-            placeholder="Wpisz odpowiedź"
+            placeholder={t('runner.numericPlaceholder')}
             placeholderTextColor={theme.textSecondary}
             onSubmitEditing={onSubmitNumeric}
             returnKeyType="done"
@@ -431,7 +433,7 @@ export function PlayItem({ item, timeLimitMs, accent, onComplete }: PlayItemProp
             ]}
           />
           <PrimaryButton
-            label="Zatwierdź"
+            label={t('runner.submit')}
             onPress={onSubmitNumeric}
             disabled={showFeedback || numericText.trim() === ''}
           />
@@ -460,24 +462,25 @@ function ResultsView({
 }) {
   const theme = useTheme();
   const router = useRouter();
+  const t = useT();
   const accuracyPct = Math.round(result.accuracy * 100);
   const avgSec = (result.avgResponseMs / 1000).toFixed(1);
   const isRecord = result.score > prevBest;
-  const levelLabel = LEVEL_OPTIONS.find((l) => l.value === result.level)?.label ?? result.level;
+  const levelLabel = t(levelLabelKey(result.level));
 
   return (
     <Screen>
-      <AppText variant="title">Koniec sesji</AppText>
-      <AppText variant="caption">Poziom: {levelLabel}</AppText>
+      <AppText variant="title">{t('runner.doneTitle')}</AppText>
+      <AppText variant="caption">{t('runner.levelPrefix', { label: levelLabel })}</AppText>
 
       <View style={styles.statRow}>
-        <Stat label="Wynik" value={String(result.score)} accent={accent} />
-        <Stat label="Trafność" value={`${accuracyPct}%`} />
-        <Stat label="Śr. czas" value={`${avgSec}s`} />
+        <Stat label={t('runner.score')} value={String(result.score)} accent={accent} />
+        <Stat label={t('runner.accuracy')} value={`${accuracyPct}%`} />
+        <Stat label={t('runner.avgTime')} value={`${avgSec}s`} />
       </View>
 
       <AppText variant="bodyMuted">
-        Poprawne odpowiedzi: {result.correct} / {result.totalItems}
+        {t('runner.correctOf', { c: result.correct, t: result.totalItems })}
       </AppText>
 
       <View
@@ -485,16 +488,16 @@ function ResultsView({
         <Text
           style={[styles.recordText, { color: isRecord ? theme.successText : theme.textSecondary }]}>
           {isRecord
-            ? `Nowy rekord (${levelLabel})! Poprzedni: ${prevBest}`
-            : `Najlepszy wynik (${levelLabel}): ${Math.max(prevBest, result.score)}`}
+            ? t('runner.newRecord', { label: levelLabel, prev: prevBest })
+            : t('runner.bestScore', { label: levelLabel, best: Math.max(prevBest, result.score) })}
         </Text>
       </View>
 
       <View style={styles.actions}>
-        <PrimaryButton label="Jeszcze raz" onPress={onRetry} />
-        <PrimaryButton label="Zmień poziom" variant="secondary" onPress={onChangeLevel} />
-        <PrimaryButton label="Statystyki" variant="ghost" onPress={() => router.push('/stats')} />
-        <PrimaryButton label="Wróć" variant="ghost" onPress={onBack} />
+        <PrimaryButton label={t('common.retry')} onPress={onRetry} />
+        <PrimaryButton label={t('common.changeLevel')} variant="secondary" onPress={onChangeLevel} />
+        <PrimaryButton label={t('common.stats')} variant="ghost" onPress={() => router.push('/stats')} />
+        <PrimaryButton label={t('common.back')} variant="ghost" onPress={onBack} />
       </View>
     </Screen>
   );

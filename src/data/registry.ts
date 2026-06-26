@@ -1,9 +1,10 @@
 /**
  * Static registry of training modules and runnable exercises.
  *
- * Each exercise pairs plain metadata with a pure generator. Screens read from
- * here to render module lists and to drive the ExerciseRunner. New exercises
- * are added here as later milestones land.
+ * Each exercise pairs plain metadata with a pure generator. `title`,
+ * `description` and the variant labels are i18n keys (see `src/i18n`), resolved
+ * to the active language by the screens that render them. Screens read from
+ * here to render module lists and to drive the ExerciseRunner.
  */
 import type { ExerciseDef, ModuleId } from '@/types';
 import { ModuleColors } from '@/constants/theme';
@@ -19,56 +20,34 @@ import { generateSeries } from '@/exercises/reaction/series';
 
 export interface ModuleMeta {
   id: ModuleId;
+  /** i18n key. */
   title: string;
+  /** i18n key. */
   subtitle: string;
   emoji: string;
   color: string;
 }
 
 export const MODULES: ModuleMeta[] = [
-  {
-    id: 'math',
-    title: 'Matematyka pod czas',
-    subtitle: 'Prędkość–dystans–czas, działania, procenty, kursy',
-    emoji: '🧮',
-    color: ModuleColors.math,
-  },
-  {
-    id: 'spatial',
-    title: 'Wyobraźnia przestrzenna / 3D',
-    subtitle: 'Składanie kostki, rotacje, orientacja, współrzędne',
-    emoji: '🧊',
-    color: ModuleColors.spatial,
-  },
-  {
-    id: 'memory',
-    title: 'Pamięć i multitasking',
-    subtitle: 'Zapamiętywanie, n-back, Multipass, radar/DART',
-    emoji: '🧠',
-    color: ModuleColors.memory,
-  },
-  {
-    id: 'reaction',
-    title: 'Reakcja i serie liczbowe',
-    subtitle: 'Czas reakcji, go/no-go, ciągi liczbowe',
-    emoji: '⚡',
-    color: ModuleColors.reaction,
-  },
+  { id: 'math', title: 'mod.math.title', subtitle: 'mod.math.sub', emoji: '🧮', color: ModuleColors.math },
+  { id: 'spatial', title: 'mod.spatial.title', subtitle: 'mod.spatial.sub', emoji: '🧊', color: ModuleColors.spatial },
+  { id: 'memory', title: 'mod.memory.title', subtitle: 'mod.memory.sub', emoji: '🧠', color: ModuleColors.memory },
+  { id: 'reaction', title: 'mod.reaction.title', subtitle: 'mod.reaction.sub', emoji: '⚡', color: ModuleColors.reaction },
 ];
 
 export const EXERCISES: ExerciseDef[] = [
   {
     id: 'math-arith',
     module: 'math',
-    title: 'Działania w pamięci',
-    description: 'Dodawanie, odejmowanie, mnożenie i dzielenie bez kalkulatora — 4 opcje.',
+    title: 'ex.math-arith.title',
+    description: 'ex.math-arith.desc',
     timePerItemSec: 12,
     itemsPerSession: 10,
     variant: {
-      label: 'DZIAŁANIE',
+      label: 'var.action',
       default: 'all',
       options: [
-        { value: 'all', label: 'Wszystkie' },
+        { value: 'all', label: 'varopt.all' },
         { value: '+', label: '+' },
         { value: '−', label: '−' },
         { value: '×', label: '×' },
@@ -80,18 +59,18 @@ export const EXERCISES: ExerciseDef[] = [
   {
     id: 'math-vst',
     module: 'math',
-    title: 'Prędkość · dystans · czas',
-    description: 'Przeliczenia v–s–t pod presją. Wpisz wynik liczbowo.',
+    title: 'ex.math-vst.title',
+    description: 'ex.math-vst.desc',
     timePerItemSec: 15,
     itemsPerSession: 8,
     variant: {
-      label: 'SZUKANE',
+      label: 'var.sought',
       default: 'all',
       options: [
-        { value: 'all', label: 'Wszystkie' },
-        { value: 'distance', label: 'Dystans' },
-        { value: 'time', label: 'Czas' },
-        { value: 'speed', label: 'Prędk.' },
+        { value: 'all', label: 'varopt.all' },
+        { value: 'distance', label: 'varopt.distance' },
+        { value: 'time', label: 'varopt.time' },
+        { value: 'speed', label: 'varopt.speed' },
       ],
     },
     generate: generateVst,
@@ -99,17 +78,17 @@ export const EXERCISES: ExerciseDef[] = [
   {
     id: 'math-percent',
     module: 'math',
-    title: 'Procenty i proporcje',
-    description: 'Ile to X% z N oraz ułamki — 4 opcje.',
+    title: 'ex.math-percent.title',
+    description: 'ex.math-percent.desc',
     timePerItemSec: 15,
     itemsPerSession: 8,
     variant: {
-      label: 'TYP',
+      label: 'var.type',
       default: 'all',
       options: [
-        { value: 'all', label: 'Wszystkie' },
-        { value: 'percent', label: 'Procent' },
-        { value: 'fraction', label: 'Ułamek' },
+        { value: 'all', label: 'varopt.all' },
+        { value: 'percent', label: 'varopt.percent' },
+        { value: 'fraction', label: 'varopt.fraction' },
       ],
     },
     generate: generatePercent,
@@ -117,17 +96,17 @@ export const EXERCISES: ExerciseDef[] = [
   {
     id: 'math-heading',
     module: 'math',
-    title: 'Kursy i kąty',
-    description: 'Skręty w lewo/prawo i kursy przeciwne na róży 0–360° z kompasem.',
+    title: 'ex.math-heading.title',
+    description: 'ex.math-heading.desc',
     timePerItemSec: 12,
     itemsPerSession: 8,
     variant: {
-      label: 'TYP',
+      label: 'var.type',
       default: 'all',
       options: [
-        { value: 'all', label: 'Wszystkie' },
-        { value: 'turn', label: 'Skręt' },
-        { value: 'reciprocal', label: 'Przeciwny' },
+        { value: 'all', label: 'varopt.all' },
+        { value: 'turn', label: 'varopt.turn' },
+        { value: 'reciprocal', label: 'varopt.reciprocal' },
       ],
     },
     generate: generateHeading,
@@ -135,17 +114,17 @@ export const EXERCISES: ExerciseDef[] = [
   {
     id: 'spatial-orient',
     module: 'spatial',
-    title: 'Orientacja i kompas',
-    description: 'Kierunek z punktu A do B oraz obroty kierunku patrzenia (8 kierunków).',
+    title: 'ex.spatial-orient.title',
+    description: 'ex.spatial-orient.desc',
     timePerItemSec: 18,
     itemsPerSession: 8,
     variant: {
-      label: 'TYP',
+      label: 'var.type',
       default: 'all',
       options: [
-        { value: 'all', label: 'Wszystkie' },
-        { value: 'bearing8', label: 'Kierunek' },
-        { value: 'relative', label: 'Obrót' },
+        { value: 'all', label: 'varopt.all' },
+        { value: 'bearing8', label: 'varopt.bearing8' },
+        { value: 'relative', label: 'varopt.relative' },
       ],
     },
     generate: generateOrientation,
@@ -153,17 +132,17 @@ export const EXERCISES: ExerciseDef[] = [
   {
     id: 'spatial-coords',
     module: 'spatial',
-    title: 'Współrzędne (radar)',
-    description: 'Oszacuj kurs i odległość między samolotem a celem na siatce.',
+    title: 'ex.spatial-coords.title',
+    description: 'ex.spatial-coords.desc',
     timePerItemSec: 20,
     itemsPerSession: 8,
     variant: {
-      label: 'TYP',
+      label: 'var.type',
       default: 'all',
       options: [
-        { value: 'all', label: 'Wszystkie' },
-        { value: 'bearing', label: 'Kurs' },
-        { value: 'distance', label: 'Dystans' },
+        { value: 'all', label: 'varopt.all' },
+        { value: 'bearing', label: 'varopt.bearing' },
+        { value: 'distance', label: 'varopt.distance' },
       ],
     },
     generate: generateCoords,
@@ -171,8 +150,8 @@ export const EXERCISES: ExerciseDef[] = [
   {
     id: 'spatial-rotation',
     module: 'spatial',
-    title: 'Rotacja figur',
-    description: 'Wybierz kształt, który jest obrotem figury wzorcowej (uwaga na odbicia).',
+    title: 'ex.spatial-rotation.title',
+    description: 'ex.spatial-rotation.desc',
     timePerItemSec: 35,
     itemsPerSession: 8,
     generate: generateRotation,
@@ -180,8 +159,8 @@ export const EXERCISES: ExerciseDef[] = [
   {
     id: 'spatial-cube',
     module: 'spatial',
-    title: 'Składanie kostki',
-    description: 'Złóż siatkę w sześcian i wskaż poprawny widok 3D. Najtrudniejsze.',
+    title: 'ex.spatial-cube.title',
+    description: 'ex.spatial-cube.desc',
     timePerItemSec: 45,
     itemsPerSession: 6,
     generate: generateCube,
@@ -189,8 +168,8 @@ export const EXERCISES: ExerciseDef[] = [
   {
     id: 'mem-gauges',
     module: 'memory',
-    title: 'Zapamiętywanie',
-    description: 'Zapamiętaj wartości wskaźników, potem odpowiedz, ile wynosił wskazany.',
+    title: 'ex.mem-gauges.title',
+    description: 'ex.mem-gauges.desc',
     timePerItemSec: 0,
     itemsPerSession: 5,
     runner: 'memory',
@@ -198,8 +177,8 @@ export const EXERCISES: ExerciseDef[] = [
   {
     id: 'mem-nback',
     module: 'memory',
-    title: 'N-back',
-    description: 'Reaguj, gdy bieżąca litera jest taka sama jak N liter wcześniej (1/2/3-back).',
+    title: 'ex.mem-nback.title',
+    description: 'ex.mem-nback.desc',
     timePerItemSec: 0,
     itemsPerSession: 24,
     runner: 'nback',
@@ -207,8 +186,8 @@ export const EXERCISES: ExerciseDef[] = [
   {
     id: 'mem-multipass',
     module: 'memory',
-    title: 'Multipass (dwa tory)',
-    description: 'Rozgrzewka podzielności uwagi: monitoruj dwa tory naraz — kolor (zielony) i kształt (trójkąt).',
+    title: 'ex.mem-multipass.title',
+    description: 'ex.mem-multipass.desc',
     timePerItemSec: 0,
     itemsPerSession: 0,
     runner: 'multipass',
@@ -216,8 +195,8 @@ export const EXERCISES: ExerciseDef[] = [
   {
     id: 'mem-multipass-full',
     module: 'memory',
-    title: 'Multipass (pełny)',
-    description: 'Etap 2 FEAST (Multi Control Test): trzy zadania naraz — radar (odwracaj samoloty w konflikcie), paski lotów (potwierdzaj na czas) i audio (potwierdź tylko swój callsign). Lektor offline. Wynik łączny w skali stanina 1–9.',
+    title: 'ex.mem-multipass-full.title',
+    description: 'ex.mem-multipass-full.desc',
     timePerItemSec: 0,
     itemsPerSession: 0,
     runner: 'multipass-full',
@@ -225,8 +204,8 @@ export const EXERCISES: ExerciseDef[] = [
   {
     id: 'mem-radar',
     module: 'memory',
-    title: 'Radar (DART)',
-    description: 'Etap 2 FEAST: prowadź samoloty do bramek w oknie ETA komendami kursu, prędkości i (od L5) wysokości, utrzymując separację. 6 poziomów — w tym ruch niekontrolowany i rosnące obciążenie. Wynik w skali stanina 1–9.',
+    title: 'ex.mem-radar.title',
+    description: 'ex.mem-radar.desc',
     timePerItemSec: 0,
     itemsPerSession: 0,
     runner: 'radar',
@@ -234,8 +213,8 @@ export const EXERCISES: ExerciseDef[] = [
   {
     id: 'radar-rct',
     module: 'memory',
-    title: 'RCT — korytarze',
-    description: 'Etap 2 FEAST (Radar Control Test): prowadź ruch korytarzami do fixów wyjściowych na zadanym poziomie lotu, rozdzielaj go wysokością na skrzyżowaniach tras i wykonuj komendy radiowe na czas. Kurs automatyczny — sterujesz FL i prędkością. Wynik w skali stanina 1–9.',
+    title: 'ex.radar-rct.title',
+    description: 'ex.radar-rct.desc',
     timePerItemSec: 0,
     itemsPerSession: 0,
     runner: 'rct',
@@ -243,8 +222,8 @@ export const EXERCISES: ExerciseDef[] = [
   {
     id: 'react-simple',
     module: 'reaction',
-    title: 'Czas reakcji',
-    description: 'Dotknij, gdy ekran zmieni się na zielony. Mierzymy milisekundy.',
+    title: 'ex.react-simple.title',
+    description: 'ex.react-simple.desc',
     timePerItemSec: 0,
     itemsPerSession: 5,
     runner: 'reaction-simple',
@@ -252,8 +231,8 @@ export const EXERCISES: ExerciseDef[] = [
   {
     id: 'react-gonogo',
     module: 'reaction',
-    title: 'Reakcja z wyborem (go/no-go)',
-    description: 'Dotknij na GO (zielony), wstrzymaj się na STOP (czerwony).',
+    title: 'ex.react-gonogo.title',
+    description: 'ex.react-gonogo.desc',
     timePerItemSec: 0,
     itemsPerSession: 14,
     runner: 'reaction-gonogo',
@@ -261,18 +240,18 @@ export const EXERCISES: ExerciseDef[] = [
   {
     id: 'series',
     module: 'reaction',
-    title: 'Serie liczbowe',
-    description: 'Rozpoznaj regułę i podaj kolejny element ciągu — 4 opcje.',
+    title: 'ex.series.title',
+    description: 'ex.series.desc',
     timePerItemSec: 25,
     itemsPerSession: 8,
     variant: {
-      label: 'TYP CIĄGU',
+      label: 'var.seqType',
       default: 'all',
       options: [
-        { value: 'all', label: 'Wszystkie' },
-        { value: 'arithmetic', label: 'Arytm.' },
-        { value: 'geometric', label: 'Geom.' },
-        { value: 'squares', label: 'Kwadraty' },
+        { value: 'all', label: 'varopt.all' },
+        { value: 'arithmetic', label: 'varopt.arithmetic' },
+        { value: 'geometric', label: 'varopt.geometric' },
+        { value: 'squares', label: 'varopt.squares' },
       ],
     },
     generate: generateSeries,

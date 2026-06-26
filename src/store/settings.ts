@@ -9,12 +9,14 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import type { Difficulty } from '@/types';
 import { suggestLevel } from '@/store/selectors';
 import { useResultsStore } from '@/store/results';
+import { setLang, type Lang } from '@/i18n/lang';
 
 export type SessionLength = 'short' | 'normal' | 'long';
 
 interface SettingsState {
   defaultLevel: Difficulty;
   sessionLength: SessionLength;
+  language: Lang;
   haptics: boolean;
   sound: boolean;
   adaptive: boolean;
@@ -22,6 +24,7 @@ interface SettingsState {
   hasHydrated: boolean;
   setDefaultLevel: (level: Difficulty) => void;
   setSessionLength: (value: SessionLength) => void;
+  setLanguage: (value: Lang) => void;
   setHaptics: (value: boolean) => void;
   setSound: (value: boolean) => void;
   setAdaptive: (value: boolean) => void;
@@ -34,6 +37,7 @@ export const useSettingsStore = create<SettingsState>()(
     (set) => ({
       defaultLevel: 'medium',
       sessionLength: 'normal',
+      language: 'pl',
       haptics: true,
       sound: false,
       adaptive: false,
@@ -41,6 +45,11 @@ export const useSettingsStore = create<SettingsState>()(
       hasHydrated: false,
       setDefaultLevel: (level) => set({ defaultLevel: level }),
       setSessionLength: (value) => set({ sessionLength: value }),
+      // Keep the framework-free language module in sync for non-React callers.
+      setLanguage: (value) => {
+        setLang(value);
+        set({ language: value });
+      },
       setHaptics: (value) => set({ haptics: value }),
       setSound: (value) => set({ sound: value }),
       setAdaptive: (value) => set({ adaptive: value }),
@@ -50,15 +59,17 @@ export const useSettingsStore = create<SettingsState>()(
     {
       name: 'feast.settings.v1',
       storage: createJSONStorage(() => AsyncStorage),
-      partialize: ({ defaultLevel, sessionLength, haptics, sound, adaptive, onboardingSeen }) => ({
+      partialize: ({ defaultLevel, sessionLength, language, haptics, sound, adaptive, onboardingSeen }) => ({
         defaultLevel,
         sessionLength,
+        language,
         haptics,
         sound,
         adaptive,
         onboardingSeen,
       }),
       onRehydrateStorage: () => (state) => {
+        if (state) setLang(state.language);
         state?.setHasHydrated(true);
       },
     },
