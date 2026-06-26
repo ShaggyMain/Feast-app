@@ -132,8 +132,23 @@ Wszystkie ćwiczenia ze SPEC są zaimplementowane.
 
 **Radar Etap 2 (DART)** zrealizowany w zakresie **R0–R5** (grywalny i punktowany, **L1–L6** —
 patrz wyżej: ruch niekontrolowany, warstwa wysokości 3D, rosnące i stopniowo nalatujące
-obciążenie). Opcjonalnie zostaje **R6** (tryb korytarzy RCT, flight strips i zadanie audio
-Multipass) oraz **M6** (wydanie przez EAS). Patrz `SPEC.md` i [`SPEC_RADAR.md`](./SPEC_RADAR.md).
+obciążenie).
+
+**RCT — korytarze** (`radar-rct`, pierwszy kawałek **R6**): drugi test Etapu 2 (Radar Control
+Test). Sieć **korytarzy** łączy 8 fixów brzegowych z centralnym **CENTR**, więc wszystkie trasy
+krzyżują się w jednym punkcie. Samoloty **same lecą po trasie** (kurs automatyczny) do fixu
+wyjściowego — kontroler zarządza **wysokością (FL) i prędkością**, rozdziela ruch pionowo na
+skrzyżowaniu i **wykonuje komendy radiowe** (📻 „WZNIEŚ FL220") w oknie czasowym. Konflikt
+liczony tym samym **silnikiem 3D** co DART (`detectConflicts` uogólniony na strukturalny
+`Track`, współdzielony bez duplikacji). Punktacja: terminowe wyloty na właściwym poziomie +
+zgodność z komendami − czas w konflikcie → **stanina 1–9**. Silnik (`rct/engine/`:
+`types`, `sim` z prowadzeniem po trasie i cyklem instrukcji, `generate` sieci korytarzy L1–L3,
+`scoring`) to czyste, testowane funkcje; UI (`RctExercise` + `RctControls`) rysuje korytarze,
+fixy i ruch w SVG. 3 poziomy (L1 nauka → L2 skrzyżowanie z instrukcją → L3 większy ruch,
+nalatywanie i więcej komend).
+
+Zostaje reszta **R6** — pełny **Multipass** (radar + **flight strips** + **zadanie audio**
+naraz) — oraz **M6** (wydanie przez EAS). Patrz `SPEC.md` i [`SPEC_RADAR.md`](./SPEC_RADAR.md).
 
 ---
 

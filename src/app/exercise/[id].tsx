@@ -7,6 +7,7 @@ import { MemoryExercise } from '@/exercises/memory/MemoryExercise';
 import { NBackExercise } from '@/exercises/memory/NBackExercise';
 import { MultipassExercise } from '@/exercises/memory/MultipassExercise';
 import { RadarExercise } from '@/exercises/radar/RadarExercise';
+import { RctExercise } from '@/exercises/rct/RctExercise';
 
 export default function ExerciseScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -27,6 +28,8 @@ export default function ExerciseScreen() {
         return <MultipassExercise exerciseId={exerciseId} />;
       case 'radar':
         return <RadarExercise exerciseId={exerciseId} />;
+      case 'rct':
+        return <RctExercise exerciseId={exerciseId} />;
       default:
         return <ExerciseRunner exerciseId={exerciseId} />;
     }

@@ -1,11 +1,25 @@
 /** Separation / conflict detection in 3D: horizontal CPA gated by vertical
  * separation. When tracks share one flight level the vertical test is always
- * satisfied, so detection reduces to the 2D horizontal case. */
-import type { Aircraft } from './types';
+ * satisfied, so detection reduces to the 2D horizontal case.
+ *
+ * Typed against a minimal structural `Track` so both the DART `Aircraft` and the
+ * RCT corridor aircraft can share this logic without duplication. */
 import { clamp, dist, velocity } from './geometry';
 
+/** The minimal state the conflict math needs from any controllable track. */
+export interface Track {
+  id: string;
+  x: number;
+  y: number;
+  heading: number;
+  speed: number;
+  altitude: number;
+  targetAltitude: number;
+  controllable: boolean;
+}
+
 /** Horizontal closest point of approach over the next `T` seconds (linear). */
-export function closestApproach(a: Aircraft, b: Aircraft, T: number): { dist: number; t: number } {
+export function closestApproach(a: Track, b: Track, T: number): { dist: number; t: number } {
   const va = velocity(a.heading, a.speed);
   const vb = velocity(b.heading, b.speed);
   const rpx = b.x - a.x;
@@ -18,12 +32,12 @@ export function closestApproach(a: Aircraft, b: Aircraft, T: number): { dist: nu
 }
 
 /** Horizontal-only CPA distance (kept for callers/tests that ignore altitude). */
-export function cpaDistance(a: Aircraft, b: Aircraft, T: number): number {
+export function cpaDistance(a: Track, b: Track, T: number): number {
   return closestApproach(a, b, T).dist;
 }
 
 /** Signed vertical rate a track will climb/descend at (0 if level or uncontrolled). */
-function vRate(ac: Aircraft, climbRate: number): number {
+function vRate(ac: Track, climbRate: number): number {
   if (!ac.controllable || ac.altitude === ac.targetAltitude) return 0;
   return Math.sign(ac.targetAltitude - ac.altitude) * climbRate;
 }
@@ -37,7 +51,7 @@ export interface ConflictResult {
 }
 
 export function detectConflicts(
-  aircraft: Aircraft[],
+  aircraft: Track[],
   sepH: number,
   sepV: number,
   T: number,

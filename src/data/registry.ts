@@ -223,6 +223,15 @@ export const EXERCISES: ExerciseDef[] = [
     runner: 'radar',
   },
   {
+    id: 'radar-rct',
+    module: 'memory',
+    title: 'RCT — korytarze',
+    description: 'Etap 2 FEAST (Radar Control Test): prowadź ruch korytarzami do fixów wyjściowych na zadanym poziomie lotu, rozdzielaj go wysokością na skrzyżowaniach tras i wykonuj komendy radiowe na czas. Kurs automatyczny — sterujesz FL i prędkością. Wynik w skali stanina 1–9.',
+    timePerItemSec: 0,
+    itemsPerSession: 0,
+    runner: 'rct',
+  },
+  {
     id: 'react-simple',
     module: 'reaction',
     title: 'Czas reakcji',

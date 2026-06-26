@@ -136,7 +136,8 @@ export type RunnerKind =
   | 'memory'
   | 'nback'
   | 'multipass'
-  | 'radar';
+  | 'radar'
+  | 'rct';
 
 /**
  * Definition of a runnable exercise. Pure: metadata plus (for standard
