@@ -1,7 +1,8 @@
 /**
- * Command panel for the selected aircraft: heading (L20 / Direct-to-gate / R20)
- * and speed (− / +). Pure presentational — it calls back into the radar loop,
- * which mutates the world via the tested engine helpers.
+ * Command panel for the selected aircraft: heading (L20 / Direct-to-gate / R20),
+ * speed (− / +) and — when the altitude layer is active — climb/descend. Pure
+ * presentational: it calls back into the radar loop, which mutates the world via
+ * the tested engine helpers.
  */
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -38,15 +39,20 @@ function CmdButton({ label, onPress, accent, flex = 1 }: CmdButtonProps) {
 export function CommandPanel({
   selected,
   gateName,
+  vertical,
   onTurn,
   onDirect,
   onSpeed,
+  onAltitude,
 }: {
   selected: Aircraft | null;
   gateName: string | null;
+  /** Whether the altitude layer is in play (shows climb/descend). */
+  vertical: boolean;
   onTurn: (deltaDeg: number) => void;
   onDirect: () => void;
   onSpeed: (delta: number) => void;
+  onAltitude: (delta: number) => void;
 }) {
   const theme = useTheme();
 
@@ -58,6 +64,9 @@ export function CommandPanel({
     );
   }
 
+  const climbing = selected.targetAltitude !== selected.altitude;
+  const arrow = selected.targetAltitude > selected.altitude ? '↑' : '↓';
+
   return (
     <View style={[styles.wrap, { borderColor: theme.border, backgroundColor: theme.surface }]}>
       <View style={styles.headerRow}>
@@ -65,7 +74,8 @@ export function CommandPanel({
           {selected.callsign}
         </AppText>
         <AppText variant="caption" color={theme.textSecondary}>
-          KURS {Math.round(selected.heading).toString().padStart(3, '0')}°  ·  {Math.round(selected.speed)} ·  → {gateName ?? '—'}
+          KURS {Math.round(selected.heading).toString().padStart(3, '0')}°  ·  {Math.round(selected.speed)}
+          {vertical ? `  ·  FL${Math.round(selected.altitude)}${climbing ? arrow : ''}` : ''}  ·  → {gateName ?? '—'}
         </AppText>
       </View>
 
@@ -79,6 +89,13 @@ export function CommandPanel({
         <CmdButton label="− Wolniej" onPress={() => onSpeed(-4)} />
         <CmdButton label="Szybciej +" onPress={() => onSpeed(4)} />
       </View>
+
+      {vertical ? (
+        <View style={styles.row}>
+          <CmdButton label="Zniżaj ▼" onPress={() => onAltitude(-20)} />
+          <CmdButton label="▲ Wznoś" onPress={() => onAltitude(20)} />
+        </View>
+      ) : null}
     </View>
   );
 }

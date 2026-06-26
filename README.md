@@ -92,9 +92,20 @@ każdą maszynę do jej **bramki wyjściowej w oknie ETA**, utrzymując **separa
 **bursztynowo**. Punktacja karze czas w konflikcie, spóźnienia (ETA), złą bramkę i utratę
 toru, a nagradza czyste przekazania; wynik mapowany na **staninę 1–9**. Cały silnik
 (`radar/engine/`: `geometry`, `conflicts` + CPA, `sim`, `scoring`, `generate`) to **czyste,
-testowane funkcje TS bez Reacta**; UI (`RadarExercise` + `CommandPanel`) tylko rysuje (SVG)
-i zbiera dotyk. Generator scenariuszy seedowany, poziomy **L1–L3** (nauka sterowania →
-skrzyżowania kursów → obciążenie 4 maszyn). Plan i research: [`SPEC_RADAR.md`](./SPEC_RADAR.md).
+testowane funkcje TS bez Reacta**; UI (`RadarShell` + `RadarExercise` + `CommandPanel`) tylko
+rysuje (SVG) i zbiera dotyk. Generator scenariuszy seedowany, **6 poziomów L1–L6** (własny
+wybór poziomu z opisem i rekordem per poziom):
+
+- **L1–L3** — nauka sterowania → skrzyżowanie kursów → obciążenie 4 maszyn (jeden poziom lotu).
+- **L4 — ruch niekontrolowany**: szare romby to tranzyt, którego nie sterujesz, tylko omijasz
+  (silnik nie nalicza za nie kar; liczą się tylko Twoje maszyny).
+- **L5 — warstwa wysokości (3D)**: poziomy lotu (FL) i komendy **wznoszenia/zniżania**; konflikt
+  tylko gdy maszyny są blisko **poziomo i pionowo** (predykcja CPA uwzględnia wznoszenie). Część
+  konfliktów rozwiążesz wektorem **lub** zmianą poziomu; ciaśniejsze okna ETA.
+- **L6 — maks. obciążenie**: 6 maszyn + 2 obce na wielu poziomach lotu, **nalatują stopniowo**
+  (staggered spawns).
+
+Plan i research: [`SPEC_RADAR.md`](./SPEC_RADAR.md).
 
 **M5 (statystyki + tryb egzaminacyjny):**
 - **Ekran Postępy** (`progress.tsx`) — wykresy SVG (`ui/Chart`) trendu wyniku i trafności,
@@ -119,10 +130,10 @@ Wszystkie ćwiczenia ze SPEC są zaimplementowane.
 - **Eksport/Import wyników** (ekran „Dane"): kopia zapasowa jako JSON (udostępnianie) i scalanie
   importu (duplikaty pomijane). Czysty (de)serializer `store/io.ts` z testami.
 
-**Radar Etap 2 (DART)** zrealizowany w zakresie **R0–R4** (grywalny i punktowany, L1–L3 — patrz
-wyżej). Opcjonalnie zostają **R5–R6** (ruch niekontrolowany, warstwa wysokości, większe
-obciążenie; tryb korytarzy/flight strips) i **M6** (wydanie przez EAS). Patrz `SPEC.md` i
-[`SPEC_RADAR.md`](./SPEC_RADAR.md).
+**Radar Etap 2 (DART)** zrealizowany w zakresie **R0–R5** (grywalny i punktowany, **L1–L6** —
+patrz wyżej: ruch niekontrolowany, warstwa wysokości 3D, rosnące i stopniowo nalatujące
+obciążenie). Opcjonalnie zostaje **R6** (tryb korytarzy RCT, flight strips i zadanie audio
+Multipass) oraz **M6** (wydanie przez EAS). Patrz `SPEC.md` i [`SPEC_RADAR.md`](./SPEC_RADAR.md).
 
 ---
 

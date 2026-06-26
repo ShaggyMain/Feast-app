@@ -1,9 +1,10 @@
 /**
  * 3.4 Radar / DART — FEAST Stage-2 trainer. A real-time radar scope: guide each
- * aircraft to its assigned exit gate within its ETA window while keeping
- * separation. Tap an aircraft to select it, then issue heading/speed commands
- * from the panel. Aircraft in conflict glow red; predicted losses of separation
- * glow amber (CPA look-ahead).
+ * controllable aircraft to its assigned exit gate within its ETA window while
+ * keeping separation. Tap an aircraft to select it, then issue heading / speed /
+ * altitude commands. Aircraft in conflict glow red; predicted losses of
+ * separation glow amber (CPA look-ahead). Grey diamonds are uncontrolled transit
+ * traffic — you cannot command them, only avoid them.
  *
  * The whole simulation is the pure, unit-tested engine in `./engine`. This
  * component only drives a fixed-timestep loop (requestAnimationFrame +
@@ -13,24 +14,27 @@ import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import Svg, { Circle, G, Line, Polygon, Rect, Text as SvgText } from 'react-native-svg';
 
-import type { Difficulty } from '@/types';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { AppText } from '@/ui/Text';
 import { PrimaryButton } from '@/ui/PrimaryButton';
-import {
-  CustomExerciseShell,
-  type CustomSummary,
-  type FeedbackFn,
-} from '@/exercises/_shared/CustomExercise';
+import { RadarShell, type RadarFeedbackFn, type RadarSummary } from './RadarShell';
 import { CommandPanel } from './CommandPanel';
 import { generateScenario } from './engine/generate';
 import { velocity } from './engine/geometry';
 import { scoreRadar, stanineLabel } from './engine/scoring';
-import { changeSpeed, directTo, initWorld, isComplete, stepWorld, turnBy, withAircraft } from './engine/sim';
-import { emptyStats, type Scenario, type World } from './engine/types';
+import {
+  changeAltitude,
+  changeSpeed,
+  directTo,
+  initWorld,
+  isComplete,
+  stepWorld,
+  turnBy,
+  withAircraft,
+} from './engine/sim';
+import { emptyStats, type Aircraft, type RadarLevel, type Scenario, type World } from './engine/types';
 
-const LEVEL_NUM: Record<Difficulty, 1 | 2 | 3> = { easy: 1, medium: 2, hard: 3 };
 const STEP_SEC = 0.05; // 20 Hz fixed timestep
 const STEP_MS = STEP_SEC * 1000;
 
@@ -41,15 +45,16 @@ const NORMAL = '#79E08A';
 const WARN = '#FFB020';
 const CONFLICT = '#FF5A5A';
 const SELECTED = '#4D8BFF';
+const TRAFFIC = '#9AA4B2'; // uncontrolled transit
 const LABEL = '#9FB4D8';
 
 export function RadarExercise({ exerciseId }: { exerciseId: string }) {
   return (
-    <CustomExerciseShell
+    <RadarShell
       exerciseId={exerciseId}
-      tip="Doprowadź każdy samolot do jego bramki (→) w oknie ETA, utrzymując separację. Dotknij samolot i steruj kursem/prędkością. Czerwony = konflikt, bursztyn = prognoza utraty separacji. Skanuj cały ekran."
+      tip="Doprowadź każdy samolot do jego bramki (→) w oknie ETA, utrzymując separację. Dotknij maszynę i steruj kursem/prędkością (a od L5 wysokością). Czerwony = konflikt, bursztyn = prognoza. Szary romb = ruch obcy do omijania."
       renderPlay={({ level, runKey, feedback, onFinish }) => (
-        <RadarPlay key={runKey} level={LEVEL_NUM[level]} feedback={feedback} onFinish={onFinish} />
+        <RadarPlay key={runKey} level={level} feedback={feedback} onFinish={onFinish} />
       )}
     />
   );
@@ -60,9 +65,9 @@ function RadarPlay({
   feedback,
   onFinish,
 }: {
-  level: 1 | 2 | 3;
-  feedback: FeedbackFn;
-  onFinish: (s: CustomSummary) => void;
+  level: RadarLevel;
+  feedback: RadarFeedbackFn;
+  onFinish: (s: RadarSummary) => void;
 }) {
   const theme = useTheme();
   const { width } = useWindowDimensions();
@@ -73,7 +78,9 @@ function RadarPlay({
   if (!scenarioRef.current) scenarioRef.current = generateScenario(seedRef.current, level);
   const scenario = scenarioRef.current;
   const cfg = scenario.config;
+  const vertical = cfg.verticalEnabled;
   const scale = scopePx / cfg.size;
+  const controllableCount = scenario.aircraft.filter((a) => a.controllable).length;
 
   const worldRef = useRef<World | null>(null);
   if (!worldRef.current) worldRef.current = initWorld(scenario);
@@ -89,13 +96,12 @@ function RadarPlay({
     if (finishedRef.current) return;
     finishedRef.current = true;
     const w = worldRef.current!;
-    const n = scenario.aircraft.length;
+    const n = controllableCount;
     const sc = scoreRadar(w.stats, n);
     onFinish({
       totalItems: n,
       correct: w.stats.onTimeHandoffs,
       accuracy: n > 0 ? w.stats.onTimeHandoffs / n : 0,
-      avgResponseMs: 0,
       score: sc.raw,
       lines: [
         `Stanina: ${sc.stanine}/9 — ${stanineLabel(sc.stanine)}`,
@@ -147,18 +153,19 @@ function RadarPlay({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // --- commands ---
-  const issue = (fn: (ac: Parameters<typeof turnBy>[0]) => ReturnType<typeof turnBy>): void => {
+  // --- commands (only ever applied to a selected, controllable, inbound track) ---
+  const issue = (fn: (ac: Aircraft) => Aircraft): void => {
     const id = selectedRef.current;
     if (!id) return;
     const w = worldRef.current!;
     const ac = w.aircraft.find((a) => a.id === id);
-    if (!ac || ac.state !== 'inbound') return;
+    if (!ac || ac.state !== 'inbound' || !ac.controllable) return;
     worldRef.current = withAircraft(w, id, fn);
     setFrame((f) => f + 1);
   };
   const onTurn = (d: number) => issue((ac) => turnBy(ac, d));
   const onSpeed = (d: number) => issue((ac) => changeSpeed(ac, d, cfg));
+  const onAltitude = (d: number) => issue((ac) => changeAltitude(ac, d, cfg));
   const onDirect = () =>
     issue((ac) => {
       const g = scenario.gates.find((gg) => gg.id === ac.exitGateId);
@@ -172,7 +179,8 @@ function RadarPlay({
   const world = worldRef.current!;
   const px = (x: number) => x * scale;
   const inbound = world.aircraft.filter((a) => a.state === 'inbound');
-  const selected = inbound.find((a) => a.id === selectedRef.current) ?? null;
+  const pendingCount = world.aircraft.filter((a) => a.state === 'pending').length;
+  const selected = inbound.find((a) => a.id === selectedRef.current && a.controllable) ?? null;
   const selectedGate = selected
     ? scenario.gates.find((g) => g.id === selected.exitGateId)?.name ?? null
     : null;
@@ -188,13 +196,14 @@ function RadarPlay({
           ⏱ {timeLeft}s
         </AppText>
         <AppText variant="subtitle" color={NORMAL}>
-          ✅ {world.stats.onTimeHandoffs}/{scenario.aircraft.length}
+          ✅ {world.stats.onTimeHandoffs}/{controllableCount}
         </AppText>
         <AppText variant="subtitle" color={activeCount ? CONFLICT : theme.textSecondary}>
           ⚠ {activeCount ? activeCount : world.stats.conflictEvents}
         </AppText>
         <AppText variant="subtitle" color={theme.textSecondary}>
           ✈ {inbound.length}
+          {pendingCount ? `+${pendingCount}` : ''}
         </AppText>
       </View>
 
@@ -226,8 +235,9 @@ function RadarPlay({
         {inbound.map((a) => {
           const ax = px(a.x);
           const ay = px(a.y);
-          const isSel = a.id === selectedRef.current;
-          const color = a.conflict ? CONFLICT : a.warn ? WARN : isSel ? SELECTED : NORMAL;
+          const isSel = a.id === selectedRef.current && a.controllable;
+          const base = a.controllable ? (isSel ? SELECTED : NORMAL) : TRAFFIC;
+          const color = a.conflict ? CONFLICT : a.warn ? WARN : base;
           const v = velocity(a.heading, a.speed);
           const mag = Math.hypot(v.vx, v.vy) || 1;
           const len = 16 + (a.speed / cfg.maxSpeed) * scopePx * 0.14;
@@ -235,24 +245,36 @@ function RadarPlay({
           const ey = ay + (v.vy / mag) * len;
           const eta = Math.round(a.etaSec - world.elapsedSec);
           const gate = scenario.gates.find((g) => g.id === a.exitGateId);
+          const climbing = a.targetAltitude !== a.altitude;
+          const fl = `FL${Math.round(a.altitude)}${climbing ? (a.targetAltitude > a.altitude ? '↑' : '↓') : ''}`;
           return (
             <G key={a.id}>
-              <Circle cx={ax} cy={ay} r={(cfg.sepH / 2) * scale} stroke={color} strokeWidth={1} fill="none" opacity={a.conflict ? 0.5 : 0.15} />
+              <Circle cx={ax} cy={ay} r={(cfg.sepH / 2) * scale} stroke={color} strokeWidth={1} fill="none" opacity={a.conflict ? 0.5 : 0.14} />
               {isSel ? <Circle cx={ax} cy={ay} r={15} stroke={SELECTED} strokeWidth={1.5} fill="none" /> : null}
               <Line x1={ax} y1={ay} x2={ex} y2={ey} stroke={color} strokeWidth={2} />
-              <Polygon
-                points={`${ax},${ay - 8} ${ax - 5.5},${ay + 6} ${ax + 5.5},${ay + 6}`}
-                fill={color}
-                transform={`rotate(${a.heading}, ${ax}, ${ay})`}
-              />
+              {a.controllable ? (
+                <Polygon
+                  points={`${ax},${ay - 8} ${ax - 5.5},${ay + 6} ${ax + 5.5},${ay + 6}`}
+                  fill={color}
+                  transform={`rotate(${a.heading}, ${ax}, ${ay})`}
+                />
+              ) : (
+                <Rect x={ax - 5} y={ay - 5} width={10} height={10} fill="none" stroke={color} strokeWidth={2} transform={`rotate(45, ${ax}, ${ay})`} />
+              )}
               <SvgText x={ax + 11} y={ay - 4} fill={isSel ? theme.text : LABEL} fontSize={10} fontWeight="bold">
                 {a.callsign}
               </SvgText>
               <SvgText x={ax + 11} y={ay + 8} fill={LABEL} fontSize={9}>
-                {`→${gate?.name ?? ''}  ${eta >= 0 ? eta + 's' : '!'}`}
+                {a.controllable
+                  ? `→${gate?.name ?? ''}  ${eta >= 0 ? eta + 's' : '!'}${vertical ? '  ' + fl : ''}`
+                  : vertical
+                    ? fl
+                    : 'OBCY'}
               </SvgText>
-              {/* enlarged transparent hit target */}
-              <Circle cx={ax} cy={ay} r={22} fill="transparent" onPress={() => selectPlane(a.id)} />
+              {/* enlarged transparent hit target (controllable only) */}
+              {a.controllable ? (
+                <Circle cx={ax} cy={ay} r={22} fill="transparent" onPress={() => selectPlane(a.id)} />
+              ) : null}
             </G>
           );
         })}
@@ -261,9 +283,11 @@ function RadarPlay({
       <CommandPanel
         selected={selected}
         gateName={selectedGate}
+        vertical={vertical}
         onTurn={onTurn}
         onDirect={onDirect}
         onSpeed={onSpeed}
+        onAltitude={onAltitude}
       />
 
       <PrimaryButton label="Zakończ" variant="ghost" onPress={finish} style={styles.finish} />

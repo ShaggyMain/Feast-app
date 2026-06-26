@@ -28,6 +28,21 @@ export function bestScore(
   return best;
 }
 
+/** Best radar score restricted to one of the six radar levels (1–6). */
+export function bestRadarScore(
+  results: ExerciseResult[],
+  exerciseId: string,
+  radarLevel: number,
+): number {
+  let best = 0;
+  for (const r of results) {
+    if (r.exercise === exerciseId && r.radarLevel === radarLevel && r.score > best) {
+      best = r.score;
+    }
+  }
+  return best;
+}
+
 export interface ExerciseStats {
   attempts: number;
   bestScore: number;

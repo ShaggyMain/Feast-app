@@ -176,4 +176,10 @@ export interface ExerciseResult {
   accuracy: number;
   avgResponseMs: number;
   score: number;
+  /**
+   * Radar (DART) only: the 1–6 level played. `level` still carries a mapped
+   * difficulty bucket so charts/streaks work, while this preserves per-level
+   * bests for the six radar levels. Absent on all other exercises.
+   */
+  radarLevel?: number;
 }

@@ -217,7 +217,7 @@ export const EXERCISES: ExerciseDef[] = [
     id: 'mem-radar',
     module: 'memory',
     title: 'Radar (DART)',
-    description: 'Etap 2 FEAST: prowadź samoloty do bramek wyjściowych w oknie ETA, wydając komendy kursu i prędkości, i utrzymuj separację. Wynik w skali stanina 1–9.',
+    description: 'Etap 2 FEAST: prowadź samoloty do bramek w oknie ETA komendami kursu, prędkości i (od L5) wysokości, utrzymując separację. 6 poziomów — w tym ruch niekontrolowany i rosnące obciążenie. Wynik w skali stanina 1–9.',
     timePerItemSec: 0,
     itemsPerSession: 0,
     runner: 'radar',

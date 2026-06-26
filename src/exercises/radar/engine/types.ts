@@ -1,6 +1,7 @@
-/** Radar engine types (Module 3.4 DART). 2D for levels L1–L3; altitude later. */
+/** Radar engine types (Module 3.4 DART). Levels L1–L4 share one flight level
+ * (degenerate, plays 2D); L5–L6 use the altitude layer. */
 
-export type AircraftState = 'inbound' | 'handedOff' | 'lost';
+export type AircraftState = 'pending' | 'inbound' | 'handedOff' | 'lost';
 
 export interface Aircraft {
   id: string;
@@ -9,12 +10,19 @@ export interface Aircraft {
   y: number;
   heading: number;
   speed: number;
+  /** Flight level in sim units (1 unit ≈ 100 ft → FLxxx = altitude). */
+  altitude: number;
   targetHeading: number;
   targetSpeed: number;
+  targetAltitude: number;
+  /** False = uncontrolled transit traffic to avoid (cannot be commanded). */
   controllable: boolean;
+  /** Empty for uncontrolled traffic (no delivery obligation). */
   exitGateId: string;
   /** Target arrival time (seconds from scenario start). */
   etaSec: number;
+  /** Seconds after start at which the track appears (0 = present from t=0). */
+  spawnAtSec: number;
   state: AircraftState;
   /** Runtime flags set by the conflict detector. */
   conflict: boolean;
@@ -39,6 +47,14 @@ export interface RadarConfig {
   maxSpeed: number;
   /** Horizontal separation threshold (units). */
   sepH: number;
+  /** Vertical separation threshold (altitude units). */
+  sepV: number;
+  /** Climb/descent rate, altitude units/sec. */
+  climbRate: number;
+  minAlt: number;
+  maxAlt: number;
+  /** Whether the altitude layer is in play (L5+). Hides climb/descend below. */
+  verticalEnabled: boolean;
   /** CPA look-ahead seconds for predictive warnings. */
   predictT: number;
   /** How close to a gate counts as arrival. */
@@ -48,8 +64,10 @@ export interface RadarConfig {
   durationSec: number;
 }
 
+export type RadarLevel = 1 | 2 | 3 | 4 | 5 | 6;
+
 export interface Scenario {
-  level: 1 | 2 | 3;
+  level: RadarLevel;
   config: RadarConfig;
   gates: Gate[];
   aircraft: Aircraft[];

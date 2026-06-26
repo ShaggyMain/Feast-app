@@ -16,34 +16,41 @@ export function initWorld(scenario: Scenario): World {
   };
 }
 
-/** One physics step for a single aircraft (turn toward target, adjust speed, move). */
+/** One physics step for a single aircraft (turn toward target, adjust speed/altitude, move). */
 export function advanceAircraft(ac: Aircraft, cfg: RadarConfig, dt: number): Aircraft {
   if (ac.state !== 'inbound') return ac;
-  let { heading, speed } = ac;
+  let { heading, speed, altitude } = ac;
   if (ac.controllable) {
     const diff = normalizeDeg(ac.targetHeading - heading);
     heading = mod360(heading + clamp(diff, -cfg.turnRate * dt, cfg.turnRate * dt));
     speed = approach(speed, ac.targetSpeed, cfg.aRate * dt);
+    altitude = approach(altitude, ac.targetAltitude, cfg.climbRate * dt);
   }
   const v = velocity(heading, speed);
-  return { ...ac, heading, speed, x: ac.x + v.vx * dt, y: ac.y + v.vy * dt };
+  return { ...ac, heading, speed, altitude, x: ac.x + v.vx * dt, y: ac.y + v.vy * dt };
 }
 
-/** Advance the whole world by dt: move, resolve gates/bounds, detect conflicts, score time. */
+/** Advance the whole world by dt: spawn, move, resolve gates/bounds, detect conflicts, score time. */
 export function stepWorld(world: World, scenario: Scenario, dt: number): World {
   const cfg = scenario.config;
   const elapsedSec = world.elapsedSec + dt;
   const stats = { ...world.stats };
 
-  let aircraft = world.aircraft.map((ac) => advanceAircraft(ac, cfg, dt));
+  // Activate staggered traffic whose entry time has arrived.
+  let aircraft = world.aircraft.map((ac) =>
+    ac.state === 'pending' && elapsedSec >= ac.spawnAtSec ? { ...ac, state: 'inbound' as const } : ac,
+  );
+
+  aircraft = aircraft.map((ac) => advanceAircraft(ac, cfg, dt));
 
   aircraft = aircraft.map((ac) => {
     if (ac.state !== 'inbound') return ac;
-    // left the sector?
+    // left the sector? (uncontrolled traffic just transits — no penalty)
     if (ac.x < -OUT_MARGIN || ac.y < -OUT_MARGIN || ac.x > cfg.size + OUT_MARGIN || ac.y > cfg.size + OUT_MARGIN) {
-      stats.lost += 1;
+      if (ac.controllable) stats.lost += 1;
       return { ...ac, state: 'lost', conflict: false, warn: false };
     }
+    if (!ac.controllable) return ac; // uncontrolled traffic has no gate obligation
     // reached a gate?
     for (const g of scenario.gates) {
       if (dist(ac.x, ac.y, g.x, g.y) <= cfg.gateRadius) {
@@ -61,7 +68,7 @@ export function stepWorld(world: World, scenario: Scenario, dt: number): World {
   });
 
   const inbound = aircraft.filter((a) => a.state === 'inbound');
-  const cr = detectConflicts(inbound, cfg.sepH, cfg.predictT);
+  const cr = detectConflicts(inbound, cfg.sepH, cfg.sepV, cfg.predictT, cfg.climbRate);
   const activeConflict = cr.active.size > 0;
   aircraft = aircraft.map((ac) =>
     ac.state === 'inbound'
@@ -78,7 +85,7 @@ export function stepWorld(world: World, scenario: Scenario, dt: number): World {
 export function isComplete(world: World, scenario: Scenario): boolean {
   return (
     world.elapsedSec >= scenario.config.durationSec ||
-    world.aircraft.every((a) => a.state !== 'inbound')
+    world.aircraft.every((a) => a.state !== 'inbound' && a.state !== 'pending')
   );
 }
 
@@ -94,6 +101,10 @@ export function directTo(ac: Aircraft, gate: Gate): Aircraft {
 
 export function changeSpeed(ac: Aircraft, delta: number, cfg: RadarConfig): Aircraft {
   return { ...ac, targetSpeed: clamp(ac.targetSpeed + delta, cfg.minSpeed, cfg.maxSpeed) };
+}
+
+export function changeAltitude(ac: Aircraft, delta: number, cfg: RadarConfig): Aircraft {
+  return { ...ac, targetAltitude: clamp(ac.targetAltitude + delta, cfg.minAlt, cfg.maxAlt) };
 }
 
 /** Replace one aircraft (by id) in the world — used after a command. */
