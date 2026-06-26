@@ -9,6 +9,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { AppText } from '@/ui/Text';
+import { useT } from '@/i18n/useT';
 import type { RadioInstruction, RctAircraft } from './engine/types';
 
 function CmdButton({
@@ -55,12 +56,13 @@ export function RctControls({
   onExecute: (ins: RadioInstruction) => void;
 }) {
   const theme = useTheme();
+  const t = useT();
 
   return (
     <View style={styles.wrap}>
       {instructions.map((ins) => {
         const left = Math.max(0, Math.ceil(ins.dueBySec - elapsedSec));
-        const verb = ins.kind === 'speed' ? 'PRĘDKOŚĆ' : ins.kind === 'climb' ? 'WZNIEŚ' : 'ZNIŻAJ';
+        const verb = ins.kind === 'speed' ? t('rct.speed') : ins.kind === 'climb' ? t('rct.climb') : t('rct.descend');
         const target = ins.kind === 'speed' ? `${ins.value}` : `FL${ins.value}`;
         return (
           <Pressable
@@ -80,7 +82,7 @@ export function RctControls({
               </AppText>
               <View style={[styles.execBadge, { backgroundColor: theme.warning }]}>
                 <AppText variant="caption" color={theme.tintText}>
-                  Wykonaj
+                  {t('rct.execute')}
                 </AppText>
               </View>
             </View>
@@ -99,17 +101,17 @@ export function RctControls({
             </AppText>
           </View>
           <View style={styles.row}>
-            <CmdButton label="Zniżaj ▼" onPress={() => onAltitude(-20)} />
-            <CmdButton label="▲ Wznoś" onPress={() => onAltitude(20)} />
+            <CmdButton label={t('cmd.descend')} onPress={() => onAltitude(-20)} />
+            <CmdButton label={t('cmd.climb')} onPress={() => onAltitude(20)} />
           </View>
           <View style={styles.row}>
-            <CmdButton label="− Wolniej" onPress={() => onSpeed(-4)} />
-            <CmdButton label="Szybciej +" onPress={() => onSpeed(4)} />
+            <CmdButton label={t('cmd.slower')} onPress={() => onSpeed(-4)} />
+            <CmdButton label={t('cmd.faster')} onPress={() => onSpeed(4)} />
           </View>
         </View>
       ) : (
         <View style={[styles.panel, styles.empty, { borderColor: theme.border }]}>
-          <AppText variant="bodyMuted">Dotknij samolot, aby zmienić poziom lub prędkość.</AppText>
+          <AppText variant="bodyMuted">{t('rct.tapAircraft')}</AppText>
         </View>
       )}
     </View>

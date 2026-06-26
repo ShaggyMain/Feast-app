@@ -26,12 +26,9 @@ import { PrimaryButton } from '@/ui/PrimaryButton';
 import { SegmentedControl } from '@/ui/SegmentedControl';
 import { Stat } from '@/ui/Stat';
 import { AppText } from '@/ui/Text';
+import { useT } from '@/i18n/useT';
 
-const LEVEL_OPTIONS: { value: Difficulty; label: string }[] = [
-  { value: 'easy', label: 'Łatwy' },
-  { value: 'medium', label: 'Średni' },
-  { value: 'hard', label: 'Trudny' },
-];
+const LEVELS: Difficulty[] = ['easy', 'medium', 'hard'];
 
 export interface ReactionSummary {
   totalItems: number;
@@ -47,7 +44,9 @@ type FeedbackFn = (cue: SoundCue) => void;
 export function ReactionExercise({ exerciseId, kind }: { exerciseId: string; kind: RunnerKind }) {
   const router = useRouter();
   const theme = useTheme();
+  const t = useT();
   useKeepAwake();
+  const levelOptions = LEVELS.map((l) => ({ value: l, label: t(`level.${l}`) }));
 
   const def = getExercise(exerciseId);
   const addResult = useResultsStore((s) => s.addResult);
@@ -106,8 +105,8 @@ export function ReactionExercise({ exerciseId, kind }: { exerciseId: string; kin
   if (!def) {
     return (
       <Screen>
-        <AppText variant="title">Nie znaleziono ćwiczenia</AppText>
-        <PrimaryButton label="Wróć" variant="secondary" onPress={() => router.back()} />
+        <AppText variant="title">{t('common.notFound')}</AppText>
+        <PrimaryButton label={t('common.back')} variant="secondary" onPress={() => router.back()} />
       </Screen>
     );
   }
@@ -115,20 +114,18 @@ export function ReactionExercise({ exerciseId, kind }: { exerciseId: string; kin
   if (phase === 'intro') {
     return (
       <Screen>
-        <AppText variant="title">{def.title}</AppText>
-        <AppText variant="bodyMuted">{def.description}</AppText>
+        <AppText variant="title">{t(def.title)}</AppText>
+        <AppText variant="bodyMuted">{t(def.description)}</AppText>
         <View style={styles.tipBox}>
           <AppText variant="bodyMuted">
-            {kind === 'reaction-simple'
-              ? 'Czekaj na zielony ekran i dotknij jak najszybciej. Dotknięcie przed zielonym to falstart, zbyt wolne — pominięcie.'
-              : 'Dotknij na ZIELONY (GO), wstrzymaj się na CZERWONY (STOP). Liczy się szybkość i opanowanie.'}
+            {t(kind === 'reaction-simple' ? 'tip.reactSimple' : 'tip.reactGonogo')}
           </AppText>
         </View>
-        <AppText variant="label">POZIOM TRUDNOŚCI</AppText>
-        <SegmentedControl value={level} options={LEVEL_OPTIONS} onChange={setLevel} accent={theme.tint} />
+        <AppText variant="label">{t('runner.levelLabel')}</AppText>
+        <SegmentedControl value={level} options={levelOptions} onChange={setLevel} accent={theme.tint} />
         <View style={styles.actions}>
-          <PrimaryButton label="Start" onPress={start} />
-          <PrimaryButton label="Wróć" variant="ghost" onPress={() => router.back()} />
+          <PrimaryButton label={t('common.start')} onPress={start} />
+          <PrimaryButton label={t('common.back')} variant="ghost" onPress={() => router.back()} />
         </View>
       </Screen>
     );
@@ -136,15 +133,15 @@ export function ReactionExercise({ exerciseId, kind }: { exerciseId: string; kin
 
   if (phase === 'done' && summary) {
     const isRecord = summary.score > prevBestRef.current;
-    const levelLabel = LEVEL_OPTIONS.find((l) => l.value === level)?.label ?? level;
+    const levelLabel = t(`level.${level}`);
     return (
       <Screen>
-        <AppText variant="title">Koniec</AppText>
-        <AppText variant="caption">Poziom: {levelLabel}</AppText>
+        <AppText variant="title">{t('shell.done')}</AppText>
+        <AppText variant="caption">{t('runner.levelPrefix', { label: levelLabel })}</AppText>
         <View style={styles.statRow}>
-          <Stat label="Wynik" value={String(summary.score)} accent={theme.tint} />
-          <Stat label="Trafność" value={`${Math.round(summary.accuracy * 100)}%`} />
-          <Stat label="Śr. czas" value={summary.avgResponseMs ? `${summary.avgResponseMs} ms` : '—'} />
+          <Stat label={t('runner.score')} value={String(summary.score)} accent={theme.tint} />
+          <Stat label={t('runner.accuracy')} value={`${Math.round(summary.accuracy * 100)}%`} />
+          <Stat label={t('runner.avgTime')} value={summary.avgResponseMs ? `${summary.avgResponseMs} ms` : '—'} />
         </View>
         {summary.lines.map((line) => (
           <AppText key={line} variant="bodyMuted">
@@ -155,14 +152,14 @@ export function ReactionExercise({ exerciseId, kind }: { exerciseId: string; kin
           style={[styles.recordBanner, { backgroundColor: isRecord ? theme.success : theme.surfaceAlt }]}>
           <AppText variant="caption" color={isRecord ? theme.successText : theme.textSecondary}>
             {isRecord
-              ? `Nowy rekord (${levelLabel})! Poprzedni: ${prevBestRef.current}`
-              : `Najlepszy wynik (${levelLabel}): ${Math.max(prevBestRef.current, summary.score)}`}
+              ? t('runner.newRecord', { label: levelLabel, prev: prevBestRef.current })
+              : t('runner.bestScore', { label: levelLabel, best: Math.max(prevBestRef.current, summary.score) })}
           </AppText>
         </View>
         <View style={styles.actions}>
-          <PrimaryButton label="Jeszcze raz" onPress={start} />
-          <PrimaryButton label="Zmień poziom" variant="secondary" onPress={() => setPhase('intro')} />
-          <PrimaryButton label="Wróć" variant="ghost" onPress={() => router.back()} />
+          <PrimaryButton label={t('common.retry')} onPress={start} />
+          <PrimaryButton label={t('common.changeLevel')} variant="secondary" onPress={() => setPhase('intro')} />
+          <PrimaryButton label={t('common.back')} variant="ghost" onPress={() => router.back()} />
         </View>
       </Screen>
     );
@@ -187,6 +184,7 @@ function SimpleReaction({
   onFinish: (summary: ReactionSummary) => void;
 }) {
   const theme = useTheme();
+  const t = useT();
   const { trials, deadlineMs } = params;
 
   const [state, setState] = useState<'waiting' | 'go' | 'falsestart'>('waiting');
@@ -212,9 +210,9 @@ function SimpleReaction({
       avgResponseMs: avg,
       score,
       lines: [
-        `Najlepszy czas: ${best} ms`,
-        `Pominięcia (za wolno): ${missesRef.current}`,
-        `Falstarty: ${falseStartsRef.current}`,
+        t('react.bestTime', { ms: best }),
+        t('react.missesSlow', { n: missesRef.current }),
+        t('react.falseStarts', { n: falseStartsRef.current }),
       ],
     });
   }, [trials, onFinish]);
@@ -268,13 +266,14 @@ function SimpleReaction({
   };
 
   const bg = state === 'go' ? theme.success : state === 'falsestart' ? theme.warning : theme.danger;
-  const title = state === 'go' ? 'TERAZ!' : state === 'falsestart' ? 'Falstart!' : 'Czekaj na zielony…';
-  const sub = state === 'go' ? 'dotknij jak najszybciej' : state === 'falsestart' ? 'za wcześnie' : '';
+  const title =
+    state === 'go' ? t('react.now') : state === 'falsestart' ? t('react.falseStart') : t('react.waitGreen');
+  const sub = state === 'go' ? t('react.tapFast') : state === 'falsestart' ? t('react.tooEarly') : '';
 
   return (
     <Pressable style={[styles.fullArea, { backgroundColor: bg }]} onPress={handlePress}>
       <AppText variant="caption" color="#FFFFFF" style={styles.counter}>
-        Próba {Math.min(done + 1, trials)} / {trials}
+        {t('react.trial', { i: Math.min(done + 1, trials), n: trials })}
       </AppText>
       <View style={styles.center}>
         <AppText variant="hero" color="#FFFFFF" style={styles.centerText}>
@@ -306,6 +305,7 @@ function GoNoGo({
   onFinish: (summary: ReactionSummary) => void;
 }) {
   const theme = useTheme();
+  const t = useT();
   const { trials, windowMs, isiMs, goRatio } = params;
   const seqRef = useRef<Array<'go' | 'nogo'>>(buildSequence(trials, goRatio));
   const [idx, setIdx] = useState(0);
@@ -333,9 +333,9 @@ function GoNoGo({
       avgResponseMs: avg,
       score,
       lines: [
-        `Trafienia: ${hits.length}/${goCount}`,
-        `Fałszywe alarmy: ${falseAlarmsRef.current}`,
-        `Pominięcia: ${missesRef.current}`,
+        t('react.hits', { h: hits.length, g: goCount }),
+        t('react.falseAlarms', { n: falseAlarmsRef.current }),
+        t('react.misses', { n: missesRef.current }),
       ],
     });
   }, [trials, onFinish]);

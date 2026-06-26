@@ -13,6 +13,7 @@
  */
 import type { RadarStats } from './types';
 import { clamp } from './geometry';
+import { t } from '@/i18n';
 
 /** Score lost per second of active separation loss. */
 export const K_CONFLICT = 4;
@@ -64,11 +65,11 @@ export function rawToStanine(raw: number): number {
   return 1;
 }
 
-/** Short Polish label for a stanine band (shown on the results screen). */
+/** Short label for a stanine band (shown on the results screen). */
 export function stanineLabel(stanine: number): string {
-  if (stanine >= 8) return 'Doskonały';
-  if (stanine >= 6) return 'Dobry';
-  if (stanine >= 5) return 'Przeciętny';
-  if (stanine >= 3) return 'Poniżej średniej';
-  return 'Słaby';
+  if (stanine >= 8) return t('stanine.excellent');
+  if (stanine >= 6) return t('stanine.good');
+  if (stanine >= 5) return t('stanine.average');
+  if (stanine >= 3) return t('stanine.below');
+  return t('stanine.poor');
 }

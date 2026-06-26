@@ -26,6 +26,7 @@ import {
   type FeedbackFn,
 } from '@/exercises/_shared/CustomExercise';
 import { mulberry32 } from '@/core/rng';
+import { useT } from '@/i18n/useT';
 import { mpParams, type MPParams } from './engine/params';
 import { genStrips, type Strip } from './engine/strips';
 import { genCallsign, nextSpoken, type Callsign } from './engine/callsign';
@@ -60,10 +61,11 @@ interface Spoken {
 }
 
 export function MultipassFullExercise({ exerciseId }: { exerciseId: string }) {
+  const t = useT();
   return (
     <CustomExerciseShell
       exerciseId={exerciseId}
-      tip="Trzy zadania naraz. RADAR: dotknij czerwony samolot, by go odwrócić. PASKI: dotknij pasek, gdy się podświetli. AUDIO: potwierdź tylko, gdy usłyszysz SWÓJ callsign. Skanuj wszystkie trzy pola — nie fiksuj się na jednym."
+      tip={t('tip.mpFull')}
       renderPlay={({ level, runKey, feedback, onFinish }) => (
         <MPFullPlay key={runKey} params={mpParams(level as Difficulty)} feedback={feedback} onFinish={onFinish} />
       )}
@@ -81,6 +83,7 @@ function MPFullPlay({
   onFinish: (s: CustomSummary) => void;
 }) {
   const theme = useTheme();
+  const t = useT();
   const { width } = useWindowDimensions();
   const scopePx = Math.min(width - 2 * Spacing.md, 240);
   const sep = params.sepFrac * scopePx;
@@ -154,10 +157,10 @@ function MPFullPlay({
       avgResponseMs: 0,
       score: sc.raw,
       lines: [
-        `Stanina: ${sc.stanine}/9 — ${stanineLabel(sc.stanine)}`,
-        `Radar: ${sc.radar}%  (${radar.current.hits}/${radar.current.hits + radar.current.misses})`,
-        `Paski: ${sc.strips}%  (${strips.current.hits}/${strips.current.hits + strips.current.misses})`,
-        `Audio: ${sc.audio}%  (traf. ${audio.current.hits}, fałsz. ${audio.current.falseAlarms}, pom. ${audio.current.misses})`,
+        t('done.stanine', { s: sc.stanine, label: stanineLabel(sc.stanine) }),
+        t('mpf.radar', { pct: sc.radar, hits: radar.current.hits, total: radar.current.hits + radar.current.misses }),
+        t('mpf.strips', { pct: sc.strips, hits: strips.current.hits, total: strips.current.hits + strips.current.misses }),
+        t('mpf.audio', { pct: sc.audio, hits: audio.current.hits, fa: audio.current.falseAlarms, miss: audio.current.misses }),
       ],
     });
   };
@@ -362,7 +365,7 @@ function MPFullPlay({
               ]}>
               <AppText variant="subtitle" color={on ? theme.tintText : theme.text}>{s.callsign}</AppText>
               <AppText variant="caption" color={on ? theme.tintText : theme.textSecondary}>
-                {on ? 'POTWIERDŹ' : s.clearance}
+                {on ? t('mpf.confirm') : s.clearance}
               </AppText>
             </Pressable>
           );
@@ -372,10 +375,10 @@ function MPFullPlay({
       {/* AUDIO */}
       <View style={[styles.audio, { borderColor: theme.border, backgroundColor: theme.surface }]}>
         <View>
-          <AppText variant="caption" color={theme.textSecondary}>TWÓJ CALLSIGN</AppText>
+          <AppText variant="caption" color={theme.textSecondary}>{t('mpf.yourCallsign')}</AppText>
           <AppText variant="subtitle" color={theme.text}>{target.text}</AppText>
           {showText ? (
-            <AppText variant="caption" color={theme.tint}>słychać: {showText}</AppText>
+            <AppText variant="caption" color={theme.tint}>{t('mpf.heard', { cs: showText })}</AppText>
           ) : (
             <AppText variant="caption" color={theme.textSecondary}>{sp ? '🔊 ...' : ' '}</AppText>
           )}
@@ -383,11 +386,11 @@ function MPFullPlay({
         <Pressable
           onPress={tapConfirm}
           style={({ pressed }) => [styles.confirm, { backgroundColor: theme.tint }, pressed && { opacity: 0.7 }]}>
-          <AppText variant="subtitle" color={theme.tintText}>POTWIERDŹ</AppText>
+          <AppText variant="subtitle" color={theme.tintText}>{t('mpf.confirm')}</AppText>
         </Pressable>
       </View>
 
-      <PrimaryButton label="Zakończ" variant="ghost" onPress={finish} style={styles.finish} />
+      <PrimaryButton label={t('radar.finish')} variant="ghost" onPress={finish} style={styles.finish} />
     </View>
   );
 }

@@ -15,14 +15,16 @@ import {
   type FeedbackFn,
 } from '@/exercises/_shared/CustomExercise';
 import { buildNbackSequence, nbackParams, type NBackParams, type NBackSequence } from './params';
+import { useT } from '@/i18n/useT';
 
 const BLANK_MS = 400;
 
 export function NBackExercise({ exerciseId }: { exerciseId: string }) {
+  const t = useT();
   return (
     <CustomExerciseShell
       exerciseId={exerciseId}
-      tip="Pojawiają się litery. Dotknij ekranu, gdy bieżąca litera jest taka sama jak N liter wcześniej."
+      tip={t('tip.nback')}
       renderPlay={({ level, runKey, feedback, onFinish }) => (
         <NBackPlay key={runKey} params={nbackParams(level)} feedback={feedback} onFinish={onFinish} />
       )}
@@ -40,6 +42,7 @@ function NBackPlay({
   onFinish: (s: CustomSummary) => void;
 }) {
   const theme = useTheme();
+  const t = useT();
   const { n, length, isiMs, targetRate } = params;
   const seqRef = useRef<NBackSequence>(
     buildNbackSequence(mulberry32(Math.floor(Math.random() * 1e9)), n, length, targetRate),
@@ -68,9 +71,9 @@ function NBackPlay({
       avgResponseMs: avg,
       score,
       lines: [
-        `Trafienia: ${hits.length}/${targets}`,
-        `Fałszywe alarmy: ${falseAlarmsRef.current}`,
-        `Pominięcia: ${missesRef.current}`,
+        t('react.hits', { h: hits.length, g: targets }),
+        t('react.falseAlarms', { n: falseAlarmsRef.current }),
+        t('react.misses', { n: missesRef.current }),
       ],
     });
   }, [length, onFinish]);
@@ -142,7 +145,7 @@ function NBackPlay({
         </View>
       </View>
       <AppText variant="caption" color={theme.textSecondary} style={styles.hint}>
-        Dotknij, gdy litera = sprzed {n} {n === 1 ? 'kroku' : 'kroków'}
+        {n === 1 ? t('nback.hint1', { n }) : t('nback.hintN', { n })}
       </AppText>
     </Pressable>
   );

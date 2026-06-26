@@ -9,6 +9,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { AppText } from '@/ui/Text';
+import { useT } from '@/i18n/useT';
 import type { Aircraft } from './engine/types';
 
 interface CmdButtonProps {
@@ -55,11 +56,12 @@ export function CommandPanel({
   onAltitude: (delta: number) => void;
 }) {
   const theme = useTheme();
+  const t = useT();
 
   if (!selected) {
     return (
       <View style={[styles.wrap, styles.empty, { borderColor: theme.border }]}>
-        <AppText variant="bodyMuted">Dotknij samolot, aby wydać komendę.</AppText>
+        <AppText variant="bodyMuted">{t('cmd.tapAircraft')}</AppText>
       </View>
     );
   }
@@ -74,7 +76,7 @@ export function CommandPanel({
           {selected.callsign}
         </AppText>
         <AppText variant="caption" color={theme.textSecondary}>
-          KURS {Math.round(selected.heading).toString().padStart(3, '0')}°  ·  {Math.round(selected.speed)}
+          {t('cmd.hdg')} {Math.round(selected.heading).toString().padStart(3, '0')}°  ·  {Math.round(selected.speed)}
           {vertical ? `  ·  FL${Math.round(selected.altitude)}${climbing ? arrow : ''}` : ''}  ·  → {gateName ?? '—'}
         </AppText>
       </View>
@@ -86,14 +88,14 @@ export function CommandPanel({
       </View>
 
       <View style={styles.row}>
-        <CmdButton label="− Wolniej" onPress={() => onSpeed(-4)} />
-        <CmdButton label="Szybciej +" onPress={() => onSpeed(4)} />
+        <CmdButton label={t('cmd.slower')} onPress={() => onSpeed(-4)} />
+        <CmdButton label={t('cmd.faster')} onPress={() => onSpeed(4)} />
       </View>
 
       {vertical ? (
         <View style={styles.row}>
-          <CmdButton label="Zniżaj ▼" onPress={() => onAltitude(-20)} />
-          <CmdButton label="▲ Wznoś" onPress={() => onAltitude(20)} />
+          <CmdButton label={t('cmd.descend')} onPress={() => onAltitude(-20)} />
+          <CmdButton label={t('cmd.climb')} onPress={() => onAltitude(20)} />
         </View>
       ) : null}
     </View>

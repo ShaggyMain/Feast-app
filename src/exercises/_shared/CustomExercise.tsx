@@ -23,12 +23,9 @@ import { PrimaryButton } from '@/ui/PrimaryButton';
 import { SegmentedControl } from '@/ui/SegmentedControl';
 import { Stat } from '@/ui/Stat';
 import { AppText } from '@/ui/Text';
+import { useT } from '@/i18n/useT';
 
-const LEVEL_OPTIONS: { value: Difficulty; label: string }[] = [
-  { value: 'easy', label: 'Łatwy' },
-  { value: 'medium', label: 'Średni' },
-  { value: 'hard', label: 'Trudny' },
-];
+const LEVELS: Difficulty[] = ['easy', 'medium', 'hard'];
 
 export interface CustomSummary {
   totalItems: number;
@@ -59,7 +56,9 @@ export function CustomExerciseShell({
 }) {
   const router = useRouter();
   const theme = useTheme();
+  const t = useT();
   useKeepAwake();
+  const levelOptions = LEVELS.map((l) => ({ value: l, label: t(`level.${l}`) }));
 
   const def = getExercise(exerciseId);
   const addResult = useResultsStore((s) => s.addResult);
@@ -118,8 +117,8 @@ export function CustomExerciseShell({
   if (!def) {
     return (
       <Screen>
-        <AppText variant="title">Nie znaleziono ćwiczenia</AppText>
-        <PrimaryButton label="Wróć" variant="secondary" onPress={() => router.back()} />
+        <AppText variant="title">{t('common.notFound')}</AppText>
+        <PrimaryButton label={t('common.back')} variant="secondary" onPress={() => router.back()} />
       </Screen>
     );
   }
@@ -127,16 +126,16 @@ export function CustomExerciseShell({
   if (phase === 'intro') {
     return (
       <Screen>
-        <AppText variant="title">{def.title}</AppText>
-        <AppText variant="bodyMuted">{def.description}</AppText>
+        <AppText variant="title">{t(def.title)}</AppText>
+        <AppText variant="bodyMuted">{t(def.description)}</AppText>
         <View style={styles.tip}>
           <AppText variant="bodyMuted">{tip}</AppText>
         </View>
-        <AppText variant="label">POZIOM TRUDNOŚCI</AppText>
-        <SegmentedControl value={level} options={LEVEL_OPTIONS} onChange={setLevel} accent={theme.tint} />
+        <AppText variant="label">{t('runner.levelLabel')}</AppText>
+        <SegmentedControl value={level} options={levelOptions} onChange={setLevel} accent={theme.tint} />
         <View style={styles.actions}>
-          <PrimaryButton label="Start" onPress={start} />
-          <PrimaryButton label="Wróć" variant="ghost" onPress={() => router.back()} />
+          <PrimaryButton label={t('common.start')} onPress={start} />
+          <PrimaryButton label={t('common.back')} variant="ghost" onPress={() => router.back()} />
         </View>
       </Screen>
     );
@@ -144,15 +143,15 @@ export function CustomExerciseShell({
 
   if (phase === 'done' && summary) {
     const isRecord = summary.score > prevBestRef.current;
-    const levelLabel = LEVEL_OPTIONS.find((l) => l.value === level)?.label ?? level;
+    const levelLabel = t(`level.${level}`);
     return (
       <Screen>
-        <AppText variant="title">Koniec</AppText>
-        <AppText variant="caption">Poziom: {levelLabel}</AppText>
+        <AppText variant="title">{t('shell.done')}</AppText>
+        <AppText variant="caption">{t('runner.levelPrefix', { label: levelLabel })}</AppText>
         <View style={styles.statRow}>
-          <Stat label="Wynik" value={String(summary.score)} accent={theme.tint} />
-          <Stat label="Trafność" value={`${Math.round(summary.accuracy * 100)}%`} />
-          <Stat label="Śr. czas" value={summary.avgResponseMs ? `${summary.avgResponseMs} ms` : '—'} />
+          <Stat label={t('runner.score')} value={String(summary.score)} accent={theme.tint} />
+          <Stat label={t('runner.accuracy')} value={`${Math.round(summary.accuracy * 100)}%`} />
+          <Stat label={t('runner.avgTime')} value={summary.avgResponseMs ? `${summary.avgResponseMs} ms` : '—'} />
         </View>
         {summary.lines.map((line) => (
           <AppText key={line} variant="bodyMuted">
@@ -163,14 +162,14 @@ export function CustomExerciseShell({
           style={[styles.recordBanner, { backgroundColor: isRecord ? theme.success : theme.surfaceAlt }]}>
           <AppText variant="caption" color={isRecord ? theme.successText : theme.textSecondary}>
             {isRecord
-              ? `Nowy rekord (${levelLabel})! Poprzedni: ${prevBestRef.current}`
-              : `Najlepszy wynik (${levelLabel}): ${Math.max(prevBestRef.current, summary.score)}`}
+              ? t('runner.newRecord', { label: levelLabel, prev: prevBestRef.current })
+              : t('runner.bestScore', { label: levelLabel, best: Math.max(prevBestRef.current, summary.score) })}
           </AppText>
         </View>
         <View style={styles.actions}>
-          <PrimaryButton label="Jeszcze raz" onPress={start} />
-          <PrimaryButton label="Zmień poziom" variant="secondary" onPress={() => setPhase('intro')} />
-          <PrimaryButton label="Wróć" variant="ghost" onPress={() => router.back()} />
+          <PrimaryButton label={t('common.retry')} onPress={start} />
+          <PrimaryButton label={t('common.changeLevel')} variant="secondary" onPress={() => setPhase('intro')} />
+          <PrimaryButton label={t('common.back')} variant="ghost" onPress={() => router.back()} />
         </View>
       </Screen>
     );

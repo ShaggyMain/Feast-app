@@ -19,12 +19,14 @@ import {
 } from '@/exercises/_shared/CustomExercise';
 import { buildGaugeRound, type GaugeRound } from './gauges';
 import { memoryParams, type MemoryParams } from './params';
+import { useT } from '@/i18n/useT';
 
 export function MemoryExercise({ exerciseId }: { exerciseId: string }) {
+  const t = useT();
   return (
     <CustomExerciseShell
       exerciseId={exerciseId}
-      tip="Zapamiętaj wartości wskaźników. Po chwili znikną — wtedy odpowiesz, ile wynosił wskazany."
+      tip={t('tip.memory')}
       renderPlay={({ level, runKey, feedback, onFinish }) => (
         <MemoryPlay key={runKey} params={memoryParams(level)} feedback={feedback} onFinish={onFinish} />
       )}
@@ -42,6 +44,7 @@ function MemoryPlay({
   onFinish: (s: CustomSummary) => void;
 }) {
   const theme = useTheme();
+  const t = useT();
   const rngRef = useRef(mulberry32(Math.floor(Math.random() * 1e9)));
   const kRef = useRef(params.baseGauges);
   const maxKRef = useRef(params.baseGauges);
@@ -69,7 +72,10 @@ function MemoryPlay({
       accuracy: params.rounds > 0 ? correctRef.current / params.rounds : 0,
       avgResponseMs: avg,
       score: correctRef.current * 100 + speed,
-      lines: [`Poprawne: ${correctRef.current}/${params.rounds}`, `Maks. wskaźników: ${maxKRef.current}`],
+      lines: [
+        t('mem.correctLine', { c: correctRef.current, n: params.rounds }),
+        t('mem.maxGauges', { n: maxKRef.current }),
+      ],
     });
   }, [params, onFinish]);
 
@@ -152,7 +158,7 @@ function MemoryPlay({
     <Screen scroll={false}>
       <View style={styles.header}>
         <AppText variant="caption">
-          Runda {Math.min(round + 1, params.rounds)} / {params.rounds}
+          {t('mem.round', { i: Math.min(round + 1, params.rounds), n: params.rounds })}
         </AppText>
         <AppText variant="caption" color={theme.success}>
           ✓ {correctRef.current}
@@ -162,7 +168,7 @@ function MemoryPlay({
 
       {sub === 'expose' && data ? (
         <View style={styles.body}>
-          <AppText variant="subtitle">Zapamiętaj wskaźniki</AppText>
+          <AppText variant="subtitle">{t('mem.memorize')}</AppText>
           <View style={styles.gaugeWrap}>
             {data.values.map((v, i) => (
               <View key={i} style={[styles.gauge, { backgroundColor: theme.surfaceAlt }]}>
@@ -187,7 +193,7 @@ function MemoryPlay({
       {sub === 'recall' && data ? (
         <View style={styles.body}>
           <AppText variant="subtitle" style={styles.center}>
-            Jaka była wartość wskaźnika #{data.recallIndex + 1}?
+            {t('mem.recallQ', { n: data.recallIndex + 1 })}
           </AppText>
           <View style={styles.choiceGrid}>
             {data.choices.map((c) => (

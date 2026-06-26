@@ -22,15 +22,17 @@ import { Screen } from '@/ui/Screen';
 import { PrimaryButton } from '@/ui/PrimaryButton';
 import { Stat } from '@/ui/Stat';
 import { AppText } from '@/ui/Text';
+import { useT } from '@/i18n/useT';
 import type { RadarLevel } from './engine/types';
 
+/** label/desc are i18n keys, resolved in the component. */
 export const RADAR_LEVELS: { level: RadarLevel; label: string; desc: string }[] = [
-  { level: 1, label: 'L1 · Sterowanie', desc: '1 samolot. Naucz się prowadzić maszynę do bramki w oknie ETA.' },
-  { level: 2, label: 'L2 · Skrzyżowanie', desc: '2 maszyny na kursie kolizyjnym + 1 dodatkowa. Rozwiąż konflikt.' },
-  { level: 3, label: 'L3 · Cztery maszyny', desc: '4 kontrolowane samoloty — większe obciążenie i skanowanie.' },
-  { level: 4, label: 'L4 · Ruch obcy', desc: '4 kontrolowane + 1 niekontrolowany (szary) do omijania.' },
-  { level: 5, label: 'L5 · Wysokość', desc: 'Warstwa poziomów lotu (FL): wznoszenie/zniżanie + ciaśniejsze ETA.' },
-  { level: 6, label: 'L6 · Maks. obciążenie', desc: '6 + 2 obce, wiele poziomów lotu, maszyny nalatują stopniowo.' },
+  { level: 1, label: 'radar.l1.label', desc: 'radar.l1.desc' },
+  { level: 2, label: 'radar.l2.label', desc: 'radar.l2.desc' },
+  { level: 3, label: 'radar.l3.label', desc: 'radar.l3.desc' },
+  { level: 4, label: 'radar.l4.label', desc: 'radar.l4.desc' },
+  { level: 5, label: 'radar.l5.label', desc: 'radar.l5.desc' },
+  { level: 6, label: 'radar.l6.label', desc: 'radar.l6.desc' },
 ];
 
 /** Map a radar level to a difficulty bucket for the stored `level` field. */
@@ -102,6 +104,8 @@ export function RadarShell({
     [hapticsOn, soundOn],
   );
 
+  const t = useT();
+
   const onFinish = useCallback(
     (result: RadarSummary) => {
       if (!def) return;
@@ -137,8 +141,8 @@ export function RadarShell({
   if (!def) {
     return (
       <Screen>
-        <AppText variant="title">Nie znaleziono ćwiczenia</AppText>
-        <PrimaryButton label="Wróć" variant="secondary" onPress={() => router.back()} />
+        <AppText variant="title">{t('common.notFound')}</AppText>
+        <PrimaryButton label={t('common.back')} variant="secondary" onPress={() => router.back()} />
       </Screen>
     );
   }
@@ -149,12 +153,12 @@ export function RadarShell({
     const best = bestRadarScore(useResultsStore.getState().results, def.id, level);
     return (
       <Screen>
-        <AppText variant="title">{def.title}</AppText>
-        <AppText variant="bodyMuted">{def.description}</AppText>
+        <AppText variant="title">{t(def.title)}</AppText>
+        <AppText variant="bodyMuted">{t(def.description)}</AppText>
         <View style={styles.tip}>
           <AppText variant="bodyMuted">{tip}</AppText>
         </View>
-        <AppText variant="label">POZIOM (L1–L6)</AppText>
+        <AppText variant="label">{t('radar.levelLabel')}</AppText>
         <View style={[styles.levelCard, { borderColor: theme.border, backgroundColor: theme.surface }]}>
           <View style={styles.levelRow}>
             <PrimaryButton
@@ -165,7 +169,7 @@ export function RadarShell({
             />
             <View style={styles.levelLabel}>
               <AppText variant="subtitle" color={theme.text}>
-                {meta.label}
+                {t(meta.label)}
               </AppText>
             </View>
             <PrimaryButton
@@ -175,14 +179,14 @@ export function RadarShell({
               style={styles.stepBtn}
             />
           </View>
-          <AppText variant="bodyMuted">{meta.desc}</AppText>
+          <AppText variant="bodyMuted">{t(meta.desc)}</AppText>
           <AppText variant="caption" color={theme.textSecondary}>
-            Najlepszy wynik: {best > 0 ? best : '—'}
+            {t('radar.bestScore', { best: best > 0 ? best : '—' })}
           </AppText>
         </View>
         <View style={styles.actions}>
-          <PrimaryButton label="Start" onPress={start} />
-          <PrimaryButton label="Wróć" variant="ghost" onPress={() => router.back()} />
+          <PrimaryButton label={t('common.start')} onPress={start} />
+          <PrimaryButton label={t('common.back')} variant="ghost" onPress={() => router.back()} />
         </View>
       </Screen>
     );
@@ -192,12 +196,12 @@ export function RadarShell({
     const isRecord = summary.score > prevBestRef.current;
     return (
       <Screen>
-        <AppText variant="title">Koniec</AppText>
-        <AppText variant="caption">Poziom: {meta.label}</AppText>
+        <AppText variant="title">{t('shell.done')}</AppText>
+        <AppText variant="caption">{t('runner.levelPrefix', { label: t(meta.label) })}</AppText>
         <View style={styles.statRow}>
-          <Stat label="Wynik" value={String(summary.score)} accent={theme.tint} />
-          <Stat label="Na czas" value={`${Math.round(summary.accuracy * 100)}%`} />
-          <Stat label="Maszyny" value={String(summary.totalItems)} />
+          <Stat label={t('runner.score')} value={String(summary.score)} accent={theme.tint} />
+          <Stat label={t('radar.statOnTime')} value={`${Math.round(summary.accuracy * 100)}%`} />
+          <Stat label={t('radar.statAircraft')} value={String(summary.totalItems)} />
         </View>
         {summary.lines.map((line) => (
           <AppText key={line} variant="bodyMuted">
@@ -208,14 +212,14 @@ export function RadarShell({
           style={[styles.recordBanner, { backgroundColor: isRecord ? theme.success : theme.surfaceAlt }]}>
           <AppText variant="caption" color={isRecord ? theme.successText : theme.textSecondary}>
             {isRecord
-              ? `Nowy rekord (${meta.label})! Poprzedni: ${prevBestRef.current}`
-              : `Najlepszy wynik (${meta.label}): ${Math.max(prevBestRef.current, summary.score)}`}
+              ? t('runner.newRecord', { label: t(meta.label), prev: prevBestRef.current })
+              : t('runner.bestScore', { label: t(meta.label), best: Math.max(prevBestRef.current, summary.score) })}
           </AppText>
         </View>
         <View style={styles.actions}>
-          <PrimaryButton label="Jeszcze raz" onPress={start} />
-          <PrimaryButton label="Zmień poziom" variant="secondary" onPress={() => setPhase('intro')} />
-          <PrimaryButton label="Wróć" variant="ghost" onPress={() => router.back()} />
+          <PrimaryButton label={t('common.retry')} onPress={start} />
+          <PrimaryButton label={t('common.changeLevel')} variant="secondary" onPress={() => setPhase('intro')} />
+          <PrimaryButton label={t('common.back')} variant="ghost" onPress={() => router.back()} />
         </View>
       </Screen>
     );

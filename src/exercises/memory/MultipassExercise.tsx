@@ -18,6 +18,7 @@ import {
   type FeedbackFn,
 } from '@/exercises/_shared/CustomExercise';
 import { multipassParams, type MultipassParams } from './params';
+import { useT } from '@/i18n/useT';
 
 const TARGET_GREEN = '#34C759';
 const COLOR_DISTRACTORS = ['#4D8BFF', '#FFB020', '#9AA4B2'];
@@ -102,10 +103,11 @@ function useChannel(opts: {
 }
 
 export function MultipassExercise({ exerciseId }: { exerciseId: string }) {
+  const t = useT();
   return (
     <CustomExerciseShell
       exerciseId={exerciseId}
-      tip="Pilnuj dwóch torów naraz. KOLOR: dotknij, gdy zrobi się zielony. KSZTAŁT: dotknij, gdy pojawi się trójkąt ▲."
+      tip={t('tip.multipass')}
       renderPlay={({ level, runKey, feedback, onFinish }) => (
         <MultipassPlay key={runKey} params={multipassParams(level)} feedback={feedback} onFinish={onFinish} />
       )}
@@ -123,6 +125,7 @@ function MultipassPlay({
   onFinish: (s: CustomSummary) => void;
 }) {
   const theme = useTheme();
+  const t = useT();
   const runningRef = useRef(true);
   const finishedRef = useRef(false);
   const startRef = useRef(Date.now());
@@ -161,8 +164,8 @@ function MultipassPlay({
       avgResponseMs: rts.length ? Math.round(rts.reduce((s, r) => s + r, 0) / rts.length) : 0,
       score: (hitsA + hitsB) * 40 + (a.cr.current + b.cr.current) * 4,
       lines: [
-        `Tor KOLOR: ${hitsA} trafień, ${a.fa.current} fałsz. alarm.`,
-        `Tor KSZTAŁT: ${hitsB} trafień, ${b.fa.current} fałsz. alarm.`,
+        t('mp.laneColour', { hits: hitsA, fa: a.fa.current }),
+        t('mp.laneShape', { hits: hitsB, fa: b.fa.current }),
       ],
     });
   }, [colour.stats, shape.stats, onFinish]);
@@ -189,27 +192,27 @@ function MultipassPlay({
       <View style={styles.header}>
         <AppText variant="caption">⏱ {timeLeft}s</AppText>
         <AppText variant="caption" color={theme.textSecondary}>
-          dwa tory naraz
+          {t('mp.twoLanes')}
         </AppText>
       </View>
       <TimerBar progress={progress} />
 
       <Pressable style={[styles.channel, { backgroundColor: colourBg }]} onPress={colour.tap}>
         <AppText variant="label" color="#FFFFFF">
-          KOLOR
+          {t('mp.colour')}
         </AppText>
         <AppText variant="subtitle" color="#FFFFFF">
-          dotknij gdy ZIELONY
+          {t('mp.tapGreen')}
         </AppText>
       </Pressable>
 
       <Pressable style={[styles.channel, { backgroundColor: theme.surface, borderColor: theme.border, borderWidth: 1 }]} onPress={shape.tap}>
-        <AppText variant="label">KSZTAŁT</AppText>
+        <AppText variant="label">{t('mp.shape')}</AppText>
         <AppText style={styles.shape} color={theme.text}>
           {shapeGlyph}
         </AppText>
         <AppText variant="caption" color={theme.textSecondary}>
-          dotknij gdy ▲
+          {t('mp.tapTriangle')}
         </AppText>
       </Pressable>
     </View>

@@ -20,6 +20,7 @@ import {
   type FeedbackFn,
 } from '@/exercises/_shared/CustomExercise';
 import { velocity } from '@/exercises/radar/engine/geometry';
+import { useT } from '@/i18n/useT';
 import { RctControls } from './RctControls';
 import { generateScenario } from './engine/generate';
 import { scoreRct, stanineLabel } from './engine/scoring';
@@ -50,10 +51,11 @@ const SELECTED = '#4D8BFF';
 const LABEL = '#9FB4D8';
 
 export function RctExercise({ exerciseId }: { exerciseId: string }) {
+  const t = useT();
   return (
     <CustomExerciseShell
       exerciseId={exerciseId}
-      tip="Prowadź samoloty korytarzami do fixu wyjściowego na zadanym poziomie (FL). Pilnuj separacji tam, gdzie trasy krzyżują się w CENTR — rozdziel ruch wysokością. Wykonuj komendy radiowe (📻) na czas. Kurs jest automatyczny — Ty sterujesz wysokością i prędkością."
+      tip={t('tip.rct')}
       renderPlay={({ level, runKey, feedback, onFinish }) => (
         <RctPlay key={runKey} level={LEVEL_NUM[level]} feedback={feedback} onFinish={onFinish} />
       )}
@@ -71,6 +73,7 @@ function RctPlay({
   onFinish: (s: CustomSummary) => void;
 }) {
   const theme = useTheme();
+  const t = useT();
   const { width } = useWindowDimensions();
   const scopePx = Math.min(width - 2 * Spacing.md, 420);
 
@@ -105,12 +108,12 @@ function RctPlay({
       avgResponseMs: 0,
       score: sc.raw,
       lines: [
-        `Stanina: ${sc.stanine}/9 — ${stanineLabel(sc.stanine)}`,
-        `Wyloty na czas i poziomie: ${w.stats.onTimeExits}/${aircraftCount}`,
-        `Zła wysokość na wylocie: ${w.stats.wrongAlt}`,
-        `Komendy radiowe: ${w.stats.instrComplied}/${instrCount}`,
-        `Utracone z sektora: ${w.stats.lost}`,
-        `Czas w konflikcie: ${Math.round(w.stats.conflictSeconds)} s`,
+        t('done.stanine', { s: sc.stanine, label: stanineLabel(sc.stanine) }),
+        t('rct.exits', { n: w.stats.onTimeExits, total: aircraftCount }),
+        t('rct.wrongAlt', { n: w.stats.wrongAlt }),
+        t('rct.instr', { n: w.stats.instrComplied, total: instrCount }),
+        t('done.lost', { n: w.stats.lost }),
+        t('done.conflictTime', { s: Math.round(w.stats.conflictSeconds) }),
       ],
     });
   };
@@ -313,7 +316,7 @@ function RctPlay({
         onExecute={(ins) => onExecute(ins.id)}
       />
 
-      <PrimaryButton label="Zakończ" variant="ghost" onPress={finish} style={styles.finish} />
+      <PrimaryButton label={t('radar.finish')} variant="ghost" onPress={finish} style={styles.finish} />
     </View>
   );
 }

@@ -18,6 +18,7 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { AppText } from '@/ui/Text';
 import { PrimaryButton } from '@/ui/PrimaryButton';
+import { useT } from '@/i18n/useT';
 import { RadarShell, type RadarFeedbackFn, type RadarSummary } from './RadarShell';
 import { CommandPanel } from './CommandPanel';
 import { generateScenario } from './engine/generate';
@@ -49,10 +50,11 @@ const TRAFFIC = '#9AA4B2'; // uncontrolled transit
 const LABEL = '#9FB4D8';
 
 export function RadarExercise({ exerciseId }: { exerciseId: string }) {
+  const t = useT();
   return (
     <RadarShell
       exerciseId={exerciseId}
-      tip="Doprowadź każdy samolot do jego bramki (→) w oknie ETA, utrzymując separację. Dotknij maszynę i steruj kursem/prędkością (a od L5 wysokością). Czerwony = konflikt, bursztyn = prognoza. Szary romb = ruch obcy do omijania."
+      tip={t('tip.radar')}
       renderPlay={({ level, runKey, feedback, onFinish }) => (
         <RadarPlay key={runKey} level={level} feedback={feedback} onFinish={onFinish} />
       )}
@@ -70,6 +72,7 @@ function RadarPlay({
   onFinish: (s: RadarSummary) => void;
 }) {
   const theme = useTheme();
+  const t = useT();
   const { width } = useWindowDimensions();
   const scopePx = Math.min(width - 2 * Spacing.md, 420);
 
@@ -104,12 +107,12 @@ function RadarPlay({
       accuracy: n > 0 ? w.stats.onTimeHandoffs / n : 0,
       score: sc.raw,
       lines: [
-        `Stanina: ${sc.stanine}/9 — ${stanineLabel(sc.stanine)}`,
-        `Czyste przekazania: ${w.stats.onTimeHandoffs}/${n}`,
-        `Spóźnione (poza oknem ETA): ${w.stats.missedEta}`,
-        `Zła bramka: ${w.stats.wrongGate}`,
-        `Utracone z sektora: ${w.stats.lost}`,
-        `Czas w konflikcie: ${Math.round(w.stats.conflictSeconds)} s`,
+        t('done.stanine', { s: sc.stanine, label: stanineLabel(sc.stanine) }),
+        t('done.handoffs', { n: w.stats.onTimeHandoffs, total: n }),
+        t('done.lateEta', { n: w.stats.missedEta }),
+        t('done.wrongGate', { n: w.stats.wrongGate }),
+        t('done.lost', { n: w.stats.lost }),
+        t('done.conflictTime', { s: Math.round(w.stats.conflictSeconds) }),
       ],
     });
   };
@@ -269,7 +272,7 @@ function RadarPlay({
                   ? `→${gate?.name ?? ''}  ${eta >= 0 ? eta + 's' : '!'}${vertical ? '  ' + fl : ''}`
                   : vertical
                     ? fl
-                    : 'OBCY'}
+                    : t('radar.foreign')}
               </SvgText>
               {/* enlarged transparent hit target (controllable only) */}
               {a.controllable ? (
@@ -290,7 +293,7 @@ function RadarPlay({
         onAltitude={onAltitude}
       />
 
-      <PrimaryButton label="Zakończ" variant="ghost" onPress={finish} style={styles.finish} />
+      <PrimaryButton label={t('radar.finish')} variant="ghost" onPress={finish} style={styles.finish} />
     </View>
   );
 }
