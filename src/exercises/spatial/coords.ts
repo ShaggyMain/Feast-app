@@ -7,6 +7,7 @@ import type { Difficulty, GeneratedItem } from '@/types';
 import { mulberry32, randInt, type Rng } from '@/core/rng';
 import { bearing, distance } from '@/core/geometry';
 import { buildChoices } from '@/exercises/_shared/choices';
+import { t } from '@/i18n';
 
 const VARIANT: Record<string, 'bearing' | 'distance'> = {
   bearing: 'bearing',
@@ -61,12 +62,12 @@ export function generateCoords(seed: number, level: Difficulty, variant?: string
       (n) => n >= 1,
     );
     return {
-      prompt: 'Odległość między samolotem (S) a celem (C)?',
+      prompt: t('coords.distance'),
       mode: 'choice',
       choices,
       correctChoiceId,
       answerLabel: String(answer),
-      hint: 'Po przekątnej ≈ pierwiastek z sumy kwadratów.',
+      hint: t('hint.coords.distance'),
       figure,
       category: 'distance',
     };
@@ -83,12 +84,12 @@ export function generateCoords(seed: number, level: Difficulty, variant?: string
     (n) => n >= 0 && n <= 359,
   );
   return {
-    prompt: 'Przybliżony kurs z samolotu (S) do celu (C)?',
+    prompt: t('coords.bearing'),
     mode: 'choice',
     choices,
     correctChoiceId,
     answerLabel: fmtDeg(answer),
-    hint: 'Kurs liczony od północy (góra), zgodnie z zegarem.',
+    hint: t('hint.coords.bearing'),
     figure,
     category: 'bearing',
   };

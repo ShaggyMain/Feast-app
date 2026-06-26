@@ -16,6 +16,7 @@ import {
   rotate90,
   rotations,
 } from '@/core/poly';
+import { t } from '@/i18n';
 
 const STEPS: Array<[number, number]> = [
   [1, 0],
@@ -90,12 +91,12 @@ export function generateRotation(seed: number, level: Difficulty): GeneratedItem
 
   const tb = bounds(target);
   return {
-    prompt: 'Który kształt to obrót figury wzorcowej?',
+    prompt: t('rotation.prompt'),
     mode: 'choice',
     choices,
     correctChoiceId: choices[correctPos].id,
     answerLabel: String(correctPos + 1),
-    hint: 'Obrót zachowuje kształt; odbicie lustrzane to inna figura.',
+    hint: t('hint.rotation'),
     promptFigure: { type: 'shape2d', cols: tb.cols, rows: tb.rows, cells: target },
     category: 'rotation',
   };

@@ -5,6 +5,7 @@
  */
 import type { Difficulty, GeneratedItem } from '@/types';
 import { mulberry32, pick, randInt } from '@/core/rng';
+import { t } from '@/i18n';
 
 // km/h whose /60 is a whole number of km/min.
 const SPEEDS: Record<Difficulty, number[]> = {
@@ -32,17 +33,17 @@ export function generateVst(seed: number, level: Difficulty, variant?: string): 
   let unit: string;
   switch (ask) {
     case 'distance':
-      prompt = `Samolot leci ${speed} km/h. Jaki dystans pokona w ${minutes} min?`;
+      prompt = t('vst.distance', { speed, minutes });
       answer = distance;
       unit = 'km';
       break;
     case 'time':
-      prompt = `Prędkość ${speed} km/h. Ile minut zajmie ${distance} km?`;
+      prompt = t('vst.time', { speed, distance });
       answer = minutes;
       unit = 'min';
       break;
     case 'speed':
-      prompt = `Samolot pokonał ${distance} km w ${minutes} min. Jaka prędkość?`;
+      prompt = t('vst.speed', { distance, minutes });
       answer = speed;
       unit = 'km/h';
       break;
@@ -53,7 +54,7 @@ export function generateVst(seed: number, level: Difficulty, variant?: string): 
     mode: 'numeric',
     correctValue: answer,
     answerLabel: `${answer} ${unit}`,
-    hint: 'Zamień prędkość na km/min: v ÷ 60.',
+    hint: t('hint.vst'),
     category: ask,
   };
 }

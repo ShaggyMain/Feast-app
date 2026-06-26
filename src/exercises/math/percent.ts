@@ -5,6 +5,7 @@
 import type { Difficulty, GeneratedItem } from '@/types';
 import { mulberry32, pick, randInt, type Rng } from '@/core/rng';
 import { buildChoices } from '@/exercises/_shared/choices';
+import { t } from '@/i18n';
 
 function gcd(a: number, b: number): number {
   while (b) {
@@ -57,12 +58,12 @@ export function generatePercent(seed: number, level: Difficulty, variant?: strin
     const step = 100 / g; // N must be a multiple of this
     const { k, value: n } = multipleInRange(rng, step, nLo, nHi);
     result = (x / g) * k;
-    prompt = `${x}% z ${n} = ?`;
+    prompt = t('pct.percent', { x, n });
   } else {
     const [a, b] = pick(rng, FRACTIONS[level]);
     const { k, value: n } = multipleInRange(rng, b, nLo, nHi);
     result = a * k;
-    prompt = `${a}/${b} z ${n} = ?`;
+    prompt = t('pct.fraction', { a, b, n });
   }
 
   const distractors = [
@@ -83,7 +84,7 @@ export function generatePercent(seed: number, level: Difficulty, variant?: strin
     choices,
     correctChoiceId,
     answerLabel: String(result),
-    hint: 'Najpierw 10% lub 1 część, potem przeskaluj.',
+    hint: t('hint.percent'),
     category,
   };
 }

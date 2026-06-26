@@ -12,6 +12,7 @@
 import type { Choice, Difficulty, GeneratedItem } from '@/types';
 import { mulberry32, pick, shuffle, type Rng } from '@/core/rng';
 import { CUBE_NETS, OPPOSITE, cubeAdjacency, type Face } from '@/core/cube';
+import { t } from '@/i18n';
 
 interface CubeView {
   top: number;
@@ -48,12 +49,12 @@ export function generateCube(seed: number, level: Difficulty): GeneratedItem {
   const rows = Math.max(...net.map((n) => n.r)) + 1;
 
   return {
-    prompt: 'Który sześcian powstaje ze złożenia siatki?',
+    prompt: t('cube.prompt'),
     mode: 'choice',
     choices,
     correctChoiceId: choices[correctPos].id,
     answerLabel: String(correctPos + 1),
-    hint: 'Ściany przeciwległe nie mogą sąsiadować na widoku.',
+    hint: t('hint.cube'),
     promptFigure: {
       type: 'net',
       cols,

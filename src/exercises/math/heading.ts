@@ -7,6 +7,7 @@
 import type { Difficulty, GeneratedItem } from '@/types';
 import { mulberry32, pick, randInt, type Rng } from '@/core/rng';
 import { buildChoices } from '@/exercises/_shared/choices';
+import { t } from '@/i18n';
 
 /** Normalise to 0..359. */
 function norm(d: number): number {
@@ -37,7 +38,7 @@ export function generateHeading(seed: number, level: Difficulty, variant?: strin
   if (isReciprocal) {
     const x = pickHeading(rng, headingStep);
     answer = norm(x + 180);
-    prompt = `Kurs przeciwny do ${formatHeading(x)}?`;
+    prompt = t('head.reciprocal', { x: formatHeading(x) });
     figure = { type: 'heading', heading: x, turn: 180 };
     distractors.push(x, norm(x + 90), norm(x - 90), norm(answer + 10), norm(answer - 10));
   } else {
@@ -48,7 +49,7 @@ export function generateHeading(seed: number, level: Difficulty, variant?: strin
     const right = rng() < 0.5;
     const signed = right ? y : -y;
     answer = norm(x + signed);
-    prompt = `Kurs ${formatHeading(x)}, w ${right ? 'prawo' : 'lewo'} o ${y}°. Nowy kurs?`;
+    prompt = t('head.turn', { x: formatHeading(x), dir: t(right ? 'dir.right' : 'dir.left'), y });
     figure = { type: 'heading', heading: x, turn: signed };
     distractors.push(
       norm(x - signed), // wrong direction
@@ -73,7 +74,7 @@ export function generateHeading(seed: number, level: Difficulty, variant?: strin
     choices,
     correctChoiceId,
     answerLabel: formatHeading(answer),
-    hint: 'W prawo = +, w lewo = −. Zawijaj co 360°.',
+    hint: t('hint.heading'),
     figure,
     category: isReciprocal ? 'reciprocal' : 'turn',
   };

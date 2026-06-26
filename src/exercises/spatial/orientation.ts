@@ -6,6 +6,7 @@
 import type { Choice, Difficulty, GeneratedItem } from '@/types';
 import { mulberry32, pick, randInt, shuffle, type Rng } from '@/core/rng';
 import { DIR8, type Dir8, bearing, dir8ToDeg, relativeFacing, to8 } from '@/core/geometry';
+import { t } from '@/i18n';
 
 const DELTA: Record<Dir8, [number, number]> = {
   N: [0, 1],
@@ -60,12 +61,12 @@ export function generateOrientation(seed: number, level: Difficulty, variant?: s
     const c = chosen ?? { ax: 2, ay: 2, bx: 4, by: 2, dir: 'E' as Dir8 };
     const { choices, correctChoiceId } = dirChoices(rng, c.dir);
     return {
-      prompt: 'Kierunek z A do B?',
+      prompt: t('orient.bearing8'),
       mode: 'choice',
       choices,
       correctChoiceId,
       answerLabel: c.dir,
-      hint: 'Gdzie leży B względem A (N = góra).',
+      hint: t('hint.orient.bearing8'),
       figure: {
         type: 'grid',
         cells,
@@ -88,12 +89,12 @@ export function generateOrientation(seed: number, level: Difficulty, variant?: s
   const newDir = to8(relativeFacing(dir8ToDeg(facing), signed));
   const { choices, correctChoiceId } = dirChoices(rng, newDir);
   return {
-    prompt: `Patrzysz na ${facing}, skręcasz w ${right ? 'prawo' : 'lewo'} o ${mag}°. Nowy kierunek?`,
+    prompt: t('orient.relative', { facing, dir: t(right ? 'dir.right' : 'dir.left'), mag }),
     mode: 'choice',
     choices,
     correctChoiceId,
     answerLabel: newDir,
-    hint: 'W prawo = zgodnie z ruchem wskazówek zegara.',
+    hint: t('hint.orient.relative'),
     figure: { type: 'heading', heading: dir8ToDeg(facing), turn: signed },
     category: 'relative',
   };

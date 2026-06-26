@@ -8,6 +8,7 @@
 import type { Difficulty, GeneratedItem } from '@/types';
 import { mulberry32, pick, randInt, type Rng } from '@/core/rng';
 import { buildChoices } from '@/exercises/_shared/choices';
+import { t } from '@/i18n';
 
 type Rule = 'arithmetic' | 'geometric' | 'second-diff' | 'alternating' | 'fibonacci' | 'squares' | 'cubes';
 
@@ -142,7 +143,7 @@ export function generateSeries(seed: number, level: Difficulty, variant?: string
     choices,
     correctChoiceId,
     answerLabel: String(answer),
-    hint: 'Znajdź regułę: różnice, iloczyny, kwadraty…',
+    hint: t('hint.series'),
     category: rule,
   };
 }

@@ -6,6 +6,7 @@
 import type { Difficulty, GeneratedItem } from '@/types';
 import { mulberry32, pick, randInt, type Rng } from '@/core/rng';
 import { buildChoices } from '@/exercises/_shared/choices';
+import { t } from '@/i18n';
 
 type Op = '+' | '−' | '×' | '÷';
 
@@ -103,7 +104,7 @@ export function generateArith(seed: number, level: Difficulty, variant?: string)
     choices,
     correctChoiceId,
     answerLabel: String(answer),
-    hint: 'Policz w pamięci — liczy się czas.',
+    hint: t('hint.arith'),
     category,
   };
 }
