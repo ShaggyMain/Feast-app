@@ -147,8 +147,21 @@ zgodność z komendami − czas w konflikcie → **stanina 1–9**. Silnik (`rct
 fixy i ruch w SVG. 3 poziomy (L1 nauka → L2 skrzyżowanie z instrukcją → L3 większy ruch,
 nalatywanie i więcej komend).
 
-Zostaje reszta **R6** — pełny **Multipass** (radar + **flight strips** + **zadanie audio**
-naraz) — oraz **M6** (wydanie przez EAS). Patrz `SPEC.md` i [`SPEC_RADAR.md`](./SPEC_RADAR.md).
+**Multipass — pełny** (`mem-multipass-full`, domknięcie **R6**): trzeci test Etapu 2 (Multi
+Control Test) — **trzy zadania równocześnie** na jednym ekranie:
+- **Radar** — blipy dryfują; gdy dwa zbliżą się za bardzo, migają na czerwono — dotknij jeden,
+  by go odwrócić (sukces, zanim minie okno; inaczej — błąd).
+- **Flight strips** — paski lotów; gdy jeden się podświetli, potwierdź go w oknie czasu.
+- **Audio** — Twój callsign (3 litery + 3 cyfry) czyta lektor **offline (`expo-speech`)** wśród
+  innych; potwierdzasz **tylko gdy usłyszysz swój** (go/no-go). Gdy mowa niedostępna — fallback
+  na błysk tekstu, więc zadanie działa zawsze.
+
+Wszystko napędzane **jedną pętlą `requestAnimationFrame`** (cały stan w refach — bez rywalizacji
+timerów). Czyste, testowane generatory + punktacja w `multipass/engine/` (callsign, paski, łączny
+wynik trzech torów → **stanina 1–9**). Prosty wariant „2 tory" zostaje jako rozgrzewka.
+
+**Cały plan `SPEC_RADAR` (R0–R6) zrealizowany.** Opcjonalnie zostaje **M6** (publikacja przez
+EAS / Google Play). Patrz `SPEC.md` i [`SPEC_RADAR.md`](./SPEC_RADAR.md).
 
 ---
 

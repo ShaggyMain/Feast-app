@@ -136,6 +136,7 @@ export type RunnerKind =
   | 'memory'
   | 'nback'
   | 'multipass'
+  | 'multipass-full'
   | 'radar'
   | 'rct';
 

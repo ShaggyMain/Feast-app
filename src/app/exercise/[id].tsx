@@ -6,6 +6,7 @@ import { ReactionExercise } from '@/exercises/reaction/ReactionExercise';
 import { MemoryExercise } from '@/exercises/memory/MemoryExercise';
 import { NBackExercise } from '@/exercises/memory/NBackExercise';
 import { MultipassExercise } from '@/exercises/memory/MultipassExercise';
+import { MultipassFullExercise } from '@/exercises/multipass/MultipassFullExercise';
 import { RadarExercise } from '@/exercises/radar/RadarExercise';
 import { RctExercise } from '@/exercises/rct/RctExercise';
 
@@ -26,6 +27,8 @@ export default function ExerciseScreen() {
         return <NBackExercise exerciseId={exerciseId} />;
       case 'multipass':
         return <MultipassExercise exerciseId={exerciseId} />;
+      case 'multipass-full':
+        return <MultipassFullExercise exerciseId={exerciseId} />;
       case 'radar':
         return <RadarExercise exerciseId={exerciseId} />;
       case 'rct':
