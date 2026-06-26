@@ -2,6 +2,7 @@ import type { Difficulty, GeneratedItem } from '../../types';
 import { DIR8, bearing, distance, relativeFacing, to8 } from '../../core/geometry';
 import { generateOrientation } from './orientation';
 import { generateCoords } from './coords';
+import { generateCube } from './cube';
 
 const LEVELS: Difficulty[] = ['easy', 'medium', 'hard'];
 const SEEDS = Array.from({ length: 250 }, (_, i) => i);
@@ -89,6 +90,24 @@ describe('generateCoords (2.4)', () => {
     for (let seed = 0; seed < 60; seed++) {
       expect(generateCoords(seed, 'medium', 'distance').category).toBe('distance');
       expect(generateCoords(seed, 'medium', 'bearing').category).toBe('bearing');
+    }
+  });
+});
+
+describe('generateCube', () => {
+  it('every cube option shows three distinct faces (no duplicate-face giveaway)', () => {
+    for (const level of LEVELS) {
+      for (const seed of SEEDS.slice(0, 120)) {
+        const item = generateCube(seed, level);
+        expectSingleCorrectChoice(item);
+        for (const c of item.choices!) {
+          expect(c.figure?.type).toBe('cube');
+          if (c.figure?.type === 'cube') {
+            const faces = [c.figure.top, c.figure.left, c.figure.right];
+            expect(new Set(faces).size).toBe(3);
+          }
+        }
+      }
     }
   });
 });

@@ -2,10 +2,12 @@
  * Module 2.1 — Składanie kostki (net → cube).
  * Shows a hexomino net and four isometric cubes; exactly one is the real fold.
  * Correct view (camera at +x+y+z): top = U, left = E, right = N (see core/cube).
- * Distractors each carry exactly one impossibility:
- *   D1 — an opposite pair shown adjacent (top & right are opposite faces),
+ * Distractors each carry exactly one impossibility, and every cube shows three
+ * DISTINCT faces (no repeated symbol — a duplicate face would give the answer
+ * away instantly, since the net has each symbol once):
+ *   D1 — top & right are an opposite pair (U & D) shown adjacent,
  *   D2 — mirror image (left/right swapped → wrong chirality),
- *   D3 — a repeated face (a symbol appears twice).
+ *   D3 — left & right are an opposite pair (E & W) shown adjacent.
  */
 import type { Choice, Difficulty, GeneratedItem } from '@/types';
 import { mulberry32, pick, shuffle, type Rng } from '@/core/rng';
@@ -31,7 +33,7 @@ export function generateCube(seed: number, level: Difficulty): GeneratedItem {
   const correct: CubeView = { top: s('U'), left: s('E'), right: s('N') };
   const d1: CubeView = { top: s('U'), left: s('E'), right: s(OPPOSITE.U) }; // U & D adjacent
   const d2: CubeView = { top: s('U'), left: s('N'), right: s('E') }; // mirror
-  const d3: CubeView = { top: s('U'), left: s('E'), right: s('U') }; // repeated face
+  const d3: CubeView = { top: s('U'), left: s('E'), right: s(OPPOSITE.E) }; // E & W adjacent (distinct faces)
 
   const views = [correct, d1, d2, d3];
   const order = shuffle(rng, [0, 1, 2, 3]);
