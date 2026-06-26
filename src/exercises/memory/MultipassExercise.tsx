@@ -93,8 +93,12 @@ function useChannel(opts: {
     }
   }, [sub, feedback]);
 
-  const stats: ChannelStats = { hits, misses, fa, cr };
-  return { sub, stim: stimRef.current, tap, stats };
+  // Stable identity: the inner refs never change, so build the wrapper once.
+  // (A fresh object each render would re-create `finish` in the parent and make
+  // its timer effect re-run every tick — freezing the clock and the channels.)
+  const statsRef = useRef<ChannelStats | null>(null);
+  if (!statsRef.current) statsRef.current = { hits, misses, fa, cr };
+  return { sub, stim: stimRef.current, tap, stats: statsRef.current };
 }
 
 export function MultipassExercise({ exerciseId }: { exerciseId: string }) {

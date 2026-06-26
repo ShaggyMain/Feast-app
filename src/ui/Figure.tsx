@@ -53,7 +53,8 @@ function HeadingCompass({
   const a = accent ?? theme.tint;
 
   // 0° = up (North), increasing clockwise.
-  const polar = (radius: number, deg: number) => {
+  type P = { x: number; y: number };
+  const polar = (radius: number, deg: number): P => {
     const rad = ((deg - 90) * Math.PI) / 180;
     return { x: cx + radius * Math.cos(rad), y: cy + radius * Math.sin(rad) };
   };
@@ -61,18 +62,36 @@ function HeadingCompass({
   const ticks = Array.from({ length: 12 }, (_, i) => i * 30);
   const cardinals: Array<[string, number]> = [['N', 0], ['E', 90], ['S', 180], ['W', 270]];
   const headingPoint = polar(r - 6, heading);
-  const target = turn != null && turn !== 0 ? heading + turn : null;
-  const targetPoint = target != null ? polar(r - 6, target) : null;
 
-  // Sampled arc showing the turn direction (avoids SVG arc-flag pitfalls).
+  // Rotation-direction cue: a FIXED-size curved arrow near the centre showing
+  // only which way you turn (clockwise = right, anticlockwise = left). It does
+  // NOT depend on the heading or the turn magnitude — drawing the resulting
+  // direction would give the answer away (the player must compute it).
+  const turning = turn != null && turn !== 0;
+  const dirSign = turning && (turn as number) < 0 ? -1 : 1;
   let arc = '';
-  if (turn != null && turn !== 0) {
-    const steps = Math.max(2, Math.round(Math.abs(turn) / 6));
-    const rr = r * 0.5;
+  let arrow: { tip: P; a: P; b: P } | null = null;
+  if (turning) {
+    const rr = r * 0.34;
+    const startAng = -120 * dirSign;
+    const sweep = 230;
+    const steps = 24;
     for (let i = 0; i <= steps; i++) {
-      const p = polar(rr, heading + (turn * i) / steps);
+      const p = polar(rr, startAng + dirSign * sweep * (i / steps));
       arc += (i === 0 ? 'M' : ' L') + ` ${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
     }
+    const endAng = startAng + dirSign * sweep;
+    const tip = polar(rr, endAng);
+    const prev = polar(rr, endAng - dirSign * 12);
+    const ux = tip.x - prev.x;
+    const uy = tip.y - prev.y;
+    const len = Math.hypot(ux, uy) || 1;
+    const h = 9;
+    const rot = (ang: number): P => ({
+      x: tip.x + (h * ((ux / len) * Math.cos(ang) - (uy / len) * Math.sin(ang))),
+      y: tip.y + (h * ((ux / len) * Math.sin(ang) + (uy / len) * Math.cos(ang))),
+    });
+    arrow = { tip, a: rot((150 * Math.PI) / 180), b: rot((-150 * Math.PI) / 180) };
   }
 
   return (
@@ -109,17 +128,11 @@ function HeadingCompass({
             </SvgText>
           );
         })}
-        {arc ? <Path d={arc} stroke={a} strokeWidth={2} fill="none" strokeDasharray="4 3" /> : null}
-        {targetPoint ? (
-          <Line
-            x1={cx}
-            y1={cy}
-            x2={targetPoint.x}
-            y2={targetPoint.y}
-            stroke={a}
-            strokeOpacity={0.4}
-            strokeWidth={3}
-            strokeLinecap="round"
+        {arc ? <Path d={arc} stroke={a} strokeWidth={2.5} fill="none" strokeLinecap="round" /> : null}
+        {arrow ? (
+          <Polygon
+            points={`${arrow.tip.x.toFixed(1)},${arrow.tip.y.toFixed(1)} ${arrow.a.x.toFixed(1)},${arrow.a.y.toFixed(1)} ${arrow.b.x.toFixed(1)},${arrow.b.y.toFixed(1)}`}
+            fill={a}
           />
         ) : null}
         <Line
