@@ -10,7 +10,7 @@
  * timers and inputs reset cleanly.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as Haptics from 'expo-haptics';
@@ -169,17 +169,22 @@ export function ExerciseRunner({ exerciseId }: { exerciseId: string }) {
         <View style={{ flex: 1 - sessionProgress }} />
       </View>
 
-      {currentItem ? (
-        <PlayItem
-          key={`${baseSeed}-${index}`}
-          item={currentItem}
-          timeLimitMs={timeLimitMs}
-          accent={accent}
-          onComplete={handleItemComplete}
-        />
-      ) : (
-        <View style={styles.flexCenter} />
-      )}
+      {/* Edge-to-edge (SDK 56) means Android's adjustResize no longer insets the
+          RN view for the soft keyboard, so the numeric input + Submit button used
+          to sit hidden behind it. Lift them with JS-driven padding instead. */}
+      <KeyboardAvoidingView style={styles.fill} behavior="padding">
+        {currentItem ? (
+          <PlayItem
+            key={`${baseSeed}-${index}`}
+            item={currentItem}
+            timeLimitMs={timeLimitMs}
+            accent={accent}
+            onComplete={handleItemComplete}
+          />
+        ) : (
+          <View style={styles.flexCenter} />
+        )}
+      </KeyboardAvoidingView>
     </Screen>
   );
 }
@@ -505,6 +510,7 @@ function ResultsView({
 
 const styles = StyleSheet.create({
   flexCenter: { flex: 1, gap: Spacing.lg },
+  fill: { flex: 1 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   sessionTrack: { height: 6, borderRadius: Radius.pill, overflow: 'hidden', flexDirection: 'row' },
   introLabel: { marginTop: Spacing.sm },
