@@ -10,6 +10,7 @@ import type { Difficulty } from '@/types';
 import { suggestLevel } from '@/store/selectors';
 import { useResultsStore } from '@/store/results';
 import { setLang, type Lang } from '@/i18n/lang';
+import { detectDeviceLang } from '@/i18n/detect';
 
 export type SessionLength = 'short' | 'normal' | 'long';
 
@@ -17,6 +18,8 @@ interface SettingsState {
   defaultLevel: Difficulty;
   sessionLength: SessionLength;
   language: Lang;
+  /** True once the user picks a language by hand; until then it follows the phone. */
+  languageExplicit: boolean;
   haptics: boolean;
   sound: boolean;
   adaptive: boolean;
@@ -38,6 +41,7 @@ export const useSettingsStore = create<SettingsState>()(
       defaultLevel: 'medium',
       sessionLength: 'normal',
       language: 'pl',
+      languageExplicit: false,
       haptics: true,
       sound: false,
       adaptive: false,
@@ -45,10 +49,11 @@ export const useSettingsStore = create<SettingsState>()(
       hasHydrated: false,
       setDefaultLevel: (level) => set({ defaultLevel: level }),
       setSessionLength: (value) => set({ sessionLength: value }),
-      // Keep the framework-free language module in sync for non-React callers.
+      // Manual choice — remembered and no longer auto-detected. (Keep the
+      // framework-free language module in sync for non-React callers.)
       setLanguage: (value) => {
         setLang(value);
-        set({ language: value });
+        set({ language: value, languageExplicit: true });
       },
       setHaptics: (value) => set({ haptics: value }),
       setSound: (value) => set({ sound: value }),
@@ -59,18 +64,24 @@ export const useSettingsStore = create<SettingsState>()(
     {
       name: 'feast.settings.v1',
       storage: createJSONStorage(() => AsyncStorage),
-      partialize: ({ defaultLevel, sessionLength, language, haptics, sound, adaptive, onboardingSeen }) => ({
+      partialize: ({ defaultLevel, sessionLength, language, languageExplicit, haptics, sound, adaptive, onboardingSeen }) => ({
         defaultLevel,
         sessionLength,
         language,
+        languageExplicit,
         haptics,
         sound,
         adaptive,
         onboardingSeen,
       }),
       onRehydrateStorage: () => (state) => {
-        if (state) setLang(state.language);
-        state?.setHasHydrated(true);
+        if (state) {
+          // Until the user picks a language by hand, follow the phone's locale.
+          const lang = state.languageExplicit ? state.language : detectDeviceLang();
+          state.language = lang;
+          setLang(lang);
+          state.setHasHydrated(true);
+        }
       },
     },
   ),
