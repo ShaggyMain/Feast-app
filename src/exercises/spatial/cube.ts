@@ -1,7 +1,11 @@
 /**
  * Module 2.1 — Składanie kostki (net → cube).
  * Shows a hexomino net and four isometric cubes; exactly one is the real fold.
- * Correct view (camera at +x+y+z): top = U, left = E, right = N (see core/cube).
+ * `cubeAdjacency` rolls a die and paints the *contact* face, which produces the
+ * mirror-image (printed-side-IN) chirality; the puzzle shows real, printed-side-
+ * OUT cubes, so the genuine view (camera at +x+y+z) is top = U, left = N,
+ * right = E (left/right swapped vs the raw slots — verified by an independent
+ * 3D fold for every net in the test).
  * Distractors each carry exactly one impossibility, and every cube shows three
  * DISTINCT faces (no repeated symbol — a duplicate face would give the answer
  * away instantly, since the net has each symbol once):
@@ -31,9 +35,11 @@ export function generateCube(seed: number, level: Difficulty): GeneratedItem {
   const sym = symbolPermutation(rng); // cell index -> symbol id
   const s = (face: Face) => sym[faces[face]];
 
-  const correct: CubeView = { top: s('U'), left: s('E'), right: s('N') };
+  // left = N, right = E: corrects the printed-side-IN chirality of cubeAdjacency
+  // so the rendered cube is the real (printed-side-OUT) fold of the net.
+  const correct: CubeView = { top: s('U'), left: s('N'), right: s('E') };
   const d1: CubeView = { top: s('U'), left: s('E'), right: s(OPPOSITE.U) }; // U & D adjacent
-  const d2: CubeView = { top: s('U'), left: s('N'), right: s('E') }; // mirror
+  const d2: CubeView = { top: s('U'), left: s('E'), right: s('N') }; // mirror image (wrong chirality)
   const d3: CubeView = { top: s('U'), left: s('E'), right: s(OPPOSITE.E) }; // E & W adjacent (distinct faces)
 
   const views = [correct, d1, d2, d3];
