@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 import { View } from 'react-native';
-import Svg, { Circle, Line, Path, Polygon, Rect, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Line, Polygon, Rect, Text as SvgText } from 'react-native-svg';
 
 import type { FigureSpec, GridPoint, NetCellSpec } from '@/types';
 import { useTheme } from '@/hooks/use-theme';
@@ -18,7 +18,7 @@ const SYMBOLS: { color: string; letter: string }[] = [
 /** Renders the optional visual that accompanies a generated item. */
 export function Figure({ spec, accent, size = 180 }: { spec: FigureSpec; accent?: string; size?: number }) {
   if (spec.type === 'heading') {
-    return <HeadingCompass heading={spec.heading} turn={spec.turn} accent={accent} size={size} />;
+    return <HeadingCompass heading={spec.heading} accent={accent} size={size} />;
   }
   if (spec.type === 'grid') {
     return <GridFigure cells={spec.cells} points={spec.points} arrow={spec.arrow} accent={accent} size={size} />;
@@ -37,12 +37,10 @@ export function Figure({ spec, accent, size = 180 }: { spec: FigureSpec; accent?
 
 function HeadingCompass({
   heading,
-  turn,
   accent,
   size,
 }: {
   heading: number;
-  turn?: number;
   accent?: string;
   size: number;
 }) {
@@ -61,38 +59,9 @@ function HeadingCompass({
 
   const ticks = Array.from({ length: 12 }, (_, i) => i * 30);
   const cardinals: Array<[string, number]> = [['N', 0], ['E', 90], ['S', 180], ['W', 270]];
+  // Only the current facing is drawn — no turn cue. The player must work out
+  // the new direction from the prompt; an arrow would give it away.
   const headingPoint = polar(r - 6, heading);
-
-  // Rotation-direction cue: a FIXED-size curved arrow near the centre showing
-  // only which way you turn (clockwise = right, anticlockwise = left). It does
-  // NOT depend on the heading or the turn magnitude — drawing the resulting
-  // direction would give the answer away (the player must compute it).
-  const turning = turn != null && turn !== 0;
-  const dirSign = turning && (turn as number) < 0 ? -1 : 1;
-  let arc = '';
-  let arrow: { tip: P; a: P; b: P } | null = null;
-  if (turning) {
-    const rr = r * 0.34;
-    const startAng = -120 * dirSign;
-    const sweep = 230;
-    const steps = 24;
-    for (let i = 0; i <= steps; i++) {
-      const p = polar(rr, startAng + dirSign * sweep * (i / steps));
-      arc += (i === 0 ? 'M' : ' L') + ` ${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
-    }
-    const endAng = startAng + dirSign * sweep;
-    const tip = polar(rr, endAng);
-    const prev = polar(rr, endAng - dirSign * 12);
-    const ux = tip.x - prev.x;
-    const uy = tip.y - prev.y;
-    const len = Math.hypot(ux, uy) || 1;
-    const h = 9;
-    const rot = (ang: number): P => ({
-      x: tip.x + (h * ((ux / len) * Math.cos(ang) - (uy / len) * Math.sin(ang))),
-      y: tip.y + (h * ((ux / len) * Math.sin(ang) + (uy / len) * Math.cos(ang))),
-    });
-    arrow = { tip, a: rot((150 * Math.PI) / 180), b: rot((-150 * Math.PI) / 180) };
-  }
 
   return (
     <View style={{ alignItems: 'center' }}>
@@ -128,13 +97,6 @@ function HeadingCompass({
             </SvgText>
           );
         })}
-        {arc ? <Path d={arc} stroke={a} strokeWidth={2.5} fill="none" strokeLinecap="round" /> : null}
-        {arrow ? (
-          <Polygon
-            points={`${arrow.tip.x.toFixed(1)},${arrow.tip.y.toFixed(1)} ${arrow.a.x.toFixed(1)},${arrow.a.y.toFixed(1)} ${arrow.b.x.toFixed(1)},${arrow.b.y.toFixed(1)}`}
-            fill={a}
-          />
-        ) : null}
         <Line
           x1={cx}
           y1={cy}
