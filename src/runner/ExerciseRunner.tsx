@@ -10,7 +10,7 @@
  * timers and inputs reset cleanly.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as Haptics from 'expo-haptics';
@@ -44,12 +44,35 @@ function makeSeed(): number {
   return Math.floor(Math.random() * 1_000_000);
 }
 
+/**
+ * Height of the on-screen keyboard (0 when hidden). Under SDK 56 edge-to-edge +
+ * New Architecture, RN's KeyboardAvoidingView miscomputes its frame overlap and
+ * barely lifts — but the raw `keyboardDidShow` height is reported correctly, so
+ * we read it ourselves and pad the play area by it. `keyboardDidChangeFrame`
+ * keeps us in sync if the IME resizes (e.g. autofill bar).
+ */
+function useKeyboardHeight(): number {
+  const [height, setHeight] = useState(0);
+  useEffect(() => {
+    const onShow = (e: { endCoordinates?: { height: number } }) =>
+      setHeight(e.endCoordinates?.height ?? 0);
+    const subs = [
+      Keyboard.addListener('keyboardDidShow', onShow),
+      Keyboard.addListener('keyboardDidChangeFrame', onShow),
+      Keyboard.addListener('keyboardDidHide', () => setHeight(0)),
+    ];
+    return () => subs.forEach((s) => s.remove());
+  }, []);
+  return height;
+}
+
 type Phase = 'intro' | 'playing' | 'done';
 
 export function ExerciseRunner({ exerciseId }: { exerciseId: string }) {
   const theme = useTheme();
   const router = useRouter();
   const t = useT();
+  const keyboardHeight = useKeyboardHeight();
   useKeepAwake();
 
   const def = useMemo(() => getExercise(exerciseId), [exerciseId]);
@@ -170,9 +193,10 @@ export function ExerciseRunner({ exerciseId }: { exerciseId: string }) {
       </View>
 
       {/* Edge-to-edge (SDK 56) means Android's adjustResize no longer insets the
-          RN view for the soft keyboard, so the numeric input + Submit button used
-          to sit hidden behind it. Lift them with JS-driven padding instead. */}
-      <KeyboardAvoidingView style={styles.fill} behavior="padding">
+          RN view for the soft keyboard, and KeyboardAvoidingView under-lifts, so
+          the numeric input + Submit used to hide behind the keyboard. Pad the
+          play area by the measured keyboard height to lift them clear of it. */}
+      <View style={[styles.fill, { paddingBottom: keyboardHeight }]}>
         {currentItem ? (
           <PlayItem
             key={`${baseSeed}-${index}`}
@@ -184,7 +208,7 @@ export function ExerciseRunner({ exerciseId }: { exerciseId: string }) {
         ) : (
           <View style={styles.flexCenter} />
         )}
-      </KeyboardAvoidingView>
+      </View>
     </Screen>
   );
 }
@@ -334,12 +358,16 @@ export function PlayItem({ item, timeLimitMs, accent, onComplete }: PlayItemProp
   };
 
   const showFeedback = phase === 'feedback';
+  // Numeric items open the keyboard. Top-align them so the input + Submit sit
+  // high on screen, clear of the keyboard, regardless of its reported height
+  // (choice items keep the prompt centered with options at the bottom).
+  const isChoice = item.mode === 'choice' && !!item.choices;
 
   return (
     <View style={styles.flexCenter}>
       <TimerBar progress={remainingMs / timeLimitMs} />
 
-      <View style={styles.promptBlock}>
+      <View style={[styles.promptBlock, !isChoice && styles.promptBlockTop]}>
         {item.promptFigure ? (
           <Figure spec={item.promptFigure} accent={accent} size={item.promptFigure.type === 'net' ? 168 : 132} />
         ) : null}
@@ -424,13 +452,18 @@ export function PlayItem({ item, timeLimitMs, accent, onComplete }: PlayItemProp
         <View style={styles.numericBlock}>
           <TextInput
             value={numericText}
-            onChangeText={setNumericText}
-            editable={!showFeedback}
+            onChangeText={(v) => {
+              if (!showFeedback) setNumericText(v);
+            }}
+            autoFocus
             keyboardType="numbers-and-punctuation"
             inputMode="numeric"
             placeholder={t('runner.numericPlaceholder')}
             placeholderTextColor={theme.textSecondary}
             onSubmitEditing={onSubmitNumeric}
+            // Keep the keyboard up across items so the user can type → Done →
+            // type without re-tapping the field every question.
+            submitBehavior="submit"
             returnKeyType="done"
             style={[
               styles.numericInput,
@@ -515,6 +548,7 @@ const styles = StyleSheet.create({
   sessionTrack: { height: 6, borderRadius: Radius.pill, overflow: 'hidden', flexDirection: 'row' },
   introLabel: { marginTop: Spacing.sm },
   promptBlock: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: Spacing.md },
+  promptBlockTop: { flex: 0, paddingTop: Spacing.xl },
   prompt: { fontSize: 38, fontWeight: '800', textAlign: 'center' },
   promptSmall: { fontSize: 18, fontWeight: '700', textAlign: 'center' },
   hint: { fontSize: 14, textAlign: 'center' },
