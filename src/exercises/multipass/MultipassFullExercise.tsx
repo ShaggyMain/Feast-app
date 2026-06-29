@@ -36,6 +36,8 @@ const TARGET_RED = '#FF5A5A';
 const BLIP = '#79E08A';
 const SCOPE_BG = '#0B1220';
 const RING = 'rgba(77,139,255,0.16)';
+/** Seconds of look-ahead for a predicted separation breach (the warning window). */
+const CONFLICT_LOOKAHEAD_S = 5;
 
 interface Blip {
   id: string;
@@ -165,13 +167,45 @@ function MPFullPlay({
     });
   };
 
+  const blipVel = (heading: number): [number, number] => [
+    Math.sin((heading * Math.PI) / 180) * speed,
+    -Math.cos((heading * Math.PI) / 180) * speed,
+  ];
+
+  // A pair is a conflict only while CLOSING toward a separation breach within the
+  // look-ahead window — not merely near each other. Without this, a crowded scope
+  // kept blips permanently red and re-flagged them the instant you turned one.
+  const converging = (a: Blip, b: Blip): boolean => {
+    const dpx = a.x - b.x;
+    const dpy = a.y - b.y;
+    const [avx, avy] = blipVel(a.heading);
+    const [bvx, bvy] = blipVel(b.heading);
+    const dvx = avx - bvx;
+    const dvy = avy - bvy;
+    const closing = dpx * dvx + dpy * dvy;
+    if (closing >= 0) return false; // separating or parallel
+    if (Math.hypot(dpx, dpy) < sep) return true; // already inside separation, still closing
+    const dv2 = dvx * dvx + dvy * dvy;
+    if (dv2 === 0) return false;
+    const tcpa = -closing / dv2; // > 0
+    if (tcpa > CONFLICT_LOOKAHEAD_S) return false;
+    return Math.hypot(dpx + dvx * tcpa, dpy + dvy * tcpa) < sep; // will breach separation
+  };
+
   const resolveEpisode = (turn: boolean): void => {
     const ep = episodeRef.current;
     if (!ep) return;
     if (turn) {
-      blipsRef.current = blipsRef.current.map((b) =>
-        b.id === ep.a ? { ...b, heading: (b.heading + 140) % 360 } : b.id === ep.b ? { ...b, heading: (b.heading + 220) % 360 } : b,
-      );
+      const a = blipsRef.current.find((b) => b.id === ep.a);
+      const b = blipsRef.current.find((b) => b.id === ep.b);
+      if (a && b) {
+        // Steer each blip directly away from the other so they actually separate;
+        // a heading change alone (positions unchanged) used to re-trigger at once.
+        const brg = (((Math.atan2(b.x - a.x, -(b.y - a.y)) * 180) / Math.PI) % 360 + 360) % 360;
+        blipsRef.current = blipsRef.current.map((bl) =>
+          bl.id === ep.a ? { ...bl, heading: (brg + 180) % 360 } : bl.id === ep.b ? { ...bl, heading: brg } : bl,
+        );
+      }
     }
     episodeRef.current = null;
   };
@@ -207,11 +241,11 @@ function MPFullPlay({
         }
         return { ...b, x, y, heading, conflict: false };
       });
-      // conflicts (one episode at a time)
+      // conflicts (one episode at a time): only genuinely converging pairs
       let pair: [number, number] | null = null;
       for (let i = 0; i < blips.length && !pair; i++) {
         for (let j = i + 1; j < blips.length; j++) {
-          if (Math.hypot(blips[i].x - blips[j].x, blips[i].y - blips[j].y) < sep) {
+          if (converging(blips[i], blips[j])) {
             pair = [i, j];
             break;
           }

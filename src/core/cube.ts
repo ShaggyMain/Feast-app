@@ -91,61 +91,53 @@ function isConnected(net: NetCell[]): boolean {
   return seen.size === net.length;
 }
 
-/** Build candidate hexominoes and keep only those that fold to a cube. */
-function buildNets(): NetCell[][] {
-  const candidates: NetCell[][] = [];
-  // 1-4-1 family: a row of four with one tab above (col i) and one below (col j).
-  for (let i = 0; i < 4; i++) {
-    for (let j = 0; j < 4; j++) {
-      candidates.push([
-        { c: 0, r: 1 },
-        { c: 1, r: 1 },
-        { c: 2, r: 1 },
-        { c: 3, r: 1 },
-        { c: i, r: 0 },
-        { c: j, r: 2 },
-      ]);
-    }
-  }
-  // 2-2-2 staircases and 2-3-1 shapes.
-  candidates.push([
-    { c: 0, r: 0 },
-    { c: 1, r: 0 },
-    { c: 1, r: 1 },
-    { c: 2, r: 1 },
-    { c: 2, r: 2 },
-    { c: 3, r: 2 },
-  ]);
-  candidates.push([
-    { c: 1, r: 0 },
-    { c: 2, r: 0 },
-    { c: 0, r: 1 },
-    { c: 1, r: 1 },
-    { c: 2, r: 1 },
-    { c: 0, r: 2 },
-  ]);
-  candidates.push([
-    { c: 0, r: 0 },
-    { c: 0, r: 1 },
-    { c: 1, r: 1 },
-    { c: 1, r: 2 },
-    { c: 2, r: 1 },
-    { c: 2, r: 0 },
-  ]);
-
-  // De-duplicate by shape signature and keep only foldable, connected ones.
-  const seen = new Set<string>();
-  const out: NetCell[][] = [];
-  for (const net of candidates) {
-    const sig = net
+/**
+ * Every connected hexomino (size-6 polyomino), grown cell-by-cell from a single
+ * square and de-duplicated by translation-normalised signature.
+ */
+function allHexominoes(): NetCell[][] {
+  const norm = (cells: NetCell[]): NetCell[] => {
+    const minC = Math.min(...cells.map((n) => n.c));
+    const minR = Math.min(...cells.map((n) => n.r));
+    return cells.map((n) => ({ c: n.c - minC, r: n.r - minR }));
+  };
+  const sig = (cells: NetCell[]): string =>
+    norm(cells)
       .map((n) => `${n.c},${n.r}`)
       .sort()
       .join(';');
-    if (seen.has(sig)) continue;
-    seen.add(sig);
-    if (isConnected(net) && cubeAdjacency(net).valid) out.push(net);
+
+  let layer = new Map<string, NetCell[]>([['0,0', [{ c: 0, r: 0 }]]]);
+  for (let size = 1; size < 6; size++) {
+    const next = new Map<string, NetCell[]>();
+    for (const cells of layer.values()) {
+      const occ = new Set(cells.map((n) => `${n.c},${n.r}`));
+      for (const cell of cells) {
+        for (const [dc, dr] of [
+          [1, 0],
+          [-1, 0],
+          [0, 1],
+          [0, -1],
+        ]) {
+          if (occ.has(`${cell.c + dc},${cell.r + dr}`)) continue;
+          const grown = norm([...cells, { c: cell.c + dc, r: cell.r + dr }]);
+          next.set(sig(grown), grown);
+        }
+      }
+    }
+    layer = next;
   }
-  return out;
+  return [...layer.values()];
+}
+
+/**
+ * The cube nets: every hexomino that actually folds into a cube — the 11
+ * distinct shapes in all their orientations (64 nets), so the prompt is no
+ * longer almost always the same row-of-four. Connected by construction and
+ * re-checked here.
+ */
+function buildNets(): NetCell[][] {
+  return allHexominoes().filter((net) => isConnected(net) && cubeAdjacency(net).valid);
 }
 
 export const CUBE_NETS: NetCell[][] = buildNets();

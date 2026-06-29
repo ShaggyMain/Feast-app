@@ -167,6 +167,9 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     'runner.correctOf': 'Poprawne odpowiedzi: {c} / {t}',
     'runner.newRecord': 'Nowy rekord ({label})! Poprzedni: {prev}',
     'runner.bestScore': 'Najlepszy wynik ({label}): {best}',
+    'runner.review': 'Przegląd odpowiedzi',
+    'runner.reviewYours': 'Twoja: {a}',
+    'runner.reviewCorrect': 'Poprawna: {a}',
 
     // exam
     'exam.introTitle': 'Tryb egzaminacyjny',
@@ -526,6 +529,9 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     'runner.correctOf': 'Correct answers: {c} / {t}',
     'runner.newRecord': 'New record ({label})! Previous: {prev}',
     'runner.bestScore': 'Best score ({label}): {best}',
+    'runner.review': 'Answer review',
+    'runner.reviewYours': 'You: {a}',
+    'runner.reviewCorrect': 'Correct: {a}',
 
     // exam
     'exam.introTitle': 'Exam mode',

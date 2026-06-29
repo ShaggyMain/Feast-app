@@ -68,6 +68,16 @@ function useKeyboardHeight(): number {
 
 type Phase = 'intro' | 'playing' | 'done';
 
+/** One answered question, kept so the results screen can show what went wrong. */
+export interface ItemReview {
+  prompt: string;
+  correct: boolean;
+  /** What the learner chose/typed ('—' when it timed out). */
+  yourLabel: string;
+  /** The right answer. */
+  correctLabel: string;
+}
+
 export function ExerciseRunner({ exerciseId }: { exerciseId: string }) {
   const theme = useTheme();
   const router = useRouter();
@@ -89,6 +99,7 @@ export function ExerciseRunner({ exerciseId }: { exerciseId: string }) {
   const [phase, setPhase] = useState<Phase>('intro');
   const [baseSeed, setBaseSeed] = useState(makeSeed);
   const [outcomes, setOutcomes] = useState<ItemOutcome[]>([]);
+  const [reviews, setReviews] = useState<ItemReview[]>([]);
   const [savedResult, setSavedResult] = useState<ExerciseResult | null>(null);
   const prevBestRef = useRef(0);
 
@@ -124,13 +135,15 @@ export function ExerciseRunner({ exerciseId }: { exerciseId: string }) {
     setPhase('done');
   }, [outcomes, phase, total, def, savedResult, timeLimitMs, addResult, level]);
 
-  const handleItemComplete = useCallback((outcome: ItemOutcome) => {
+  const handleItemComplete = useCallback((outcome: ItemOutcome, review: ItemReview) => {
     setOutcomes((prev) => [...prev, outcome]);
+    setReviews((prev) => [...prev, review]);
   }, []);
 
   const start = useCallback(() => {
     prevBestRef.current = def ? bestScore(useResultsStore.getState().results, def.id, level) : 0;
     setOutcomes([]);
+    setReviews([]);
     setSavedResult(null);
     setBaseSeed(makeSeed());
     setPhase('playing');
@@ -167,6 +180,7 @@ export function ExerciseRunner({ exerciseId }: { exerciseId: string }) {
         result={savedResult}
         prevBest={prevBestRef.current}
         accent={accent}
+        reviews={reviews}
         onRetry={start}
         onChangeLevel={() => setPhase('intro')}
         onBack={() => router.back()}
@@ -282,7 +296,7 @@ export interface PlayItemProps {
   item: GeneratedItem;
   timeLimitMs: number;
   accent: string;
-  onComplete: (outcome: ItemOutcome) => void;
+  onComplete: (outcome: ItemOutcome, review: ItemReview) => void;
 }
 
 export function PlayItem({ item, timeLimitMs, accent, onComplete }: PlayItemProps) {
@@ -316,9 +330,21 @@ export function PlayItem({ item, timeLimitMs, accent, onComplete }: PlayItemProp
       }
       if (soundOn) playCue(graded.answered ? (graded.correct ? 'correct' : 'wrong') : 'timeout');
 
+      const yourLabel = !payload.answered
+        ? '—'
+        : item.mode === 'choice'
+          ? (item.choices?.find((c) => c.id === payload.choiceId)?.label ?? '—')
+          : String(payload.numericValue ?? '—');
+      const review: ItemReview = {
+        prompt: item.prompt,
+        correct: graded.correct,
+        yourLabel,
+        correctLabel: item.answerLabel,
+      };
+
       setOutcome(graded);
       setPhase('feedback');
-      feedbackTimer.current = setTimeout(() => onComplete(graded), FEEDBACK_MS);
+      feedbackTimer.current = setTimeout(() => onComplete(graded, review), FEEDBACK_MS);
     },
     [item, timeLimitMs, onComplete, hapticsOn, soundOn],
   );
@@ -487,6 +513,7 @@ function ResultsView({
   result,
   prevBest,
   accent,
+  reviews,
   onRetry,
   onChangeLevel,
   onBack,
@@ -494,6 +521,7 @@ function ResultsView({
   result: ExerciseResult;
   prevBest: number;
   accent: string;
+  reviews: ItemReview[];
   onRetry: () => void;
   onChangeLevel: () => void;
   onBack: () => void;
@@ -530,6 +558,38 @@ function ResultsView({
             : t('runner.bestScore', { label: levelLabel, best: Math.max(prevBest, result.score) })}
         </Text>
       </View>
+
+      {reviews.length > 0 ? (
+        <View style={styles.review}>
+          <AppText variant="label">{t('runner.review')}</AppText>
+          {reviews.map((r, i) => (
+            <View
+              key={i}
+              style={[
+                styles.reviewRow,
+                { backgroundColor: theme.surface, borderColor: r.correct ? theme.border : theme.danger },
+              ]}>
+              <Text style={[styles.reviewIdx, { color: r.correct ? theme.success : theme.danger }]}>
+                {r.correct ? '✓' : '✗'} {i + 1}
+              </Text>
+              <View style={styles.reviewBody}>
+                <Text style={[styles.reviewPrompt, { color: theme.text }]} numberOfLines={2}>
+                  {r.prompt}
+                </Text>
+                {r.correct ? (
+                  <Text style={[styles.reviewAns, { color: theme.textSecondary }]}>
+                    {t('runner.reviewCorrect', { a: r.correctLabel })}
+                  </Text>
+                ) : (
+                  <Text style={[styles.reviewAns, { color: theme.danger }]}>
+                    {t('runner.reviewYours', { a: r.yourLabel })} · {t('runner.reviewCorrect', { a: r.correctLabel })}
+                  </Text>
+                )}
+              </View>
+            </View>
+          ))}
+        </View>
+      ) : null}
 
       <View style={styles.actions}>
         <PrimaryButton label={t('common.retry')} onPress={onRetry} />
@@ -588,6 +648,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   statRow: { flexDirection: 'row', gap: Spacing.md },
+  review: { gap: Spacing.xs, marginTop: Spacing.xs },
+  reviewRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    borderWidth: 1,
+    borderRadius: Radius.md,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+  },
+  reviewIdx: { fontSize: 14, fontWeight: '800', minWidth: 28 },
+  reviewBody: { flex: 1, gap: 2 },
+  reviewPrompt: { fontSize: 14, fontWeight: '600' },
+  reviewAns: { fontSize: 13, fontWeight: '600' },
   recordBanner: { borderRadius: Radius.md, padding: Spacing.md },
   recordText: { fontSize: 15, fontWeight: '700', textAlign: 'center' },
   actions: { gap: Spacing.md, marginTop: Spacing.sm },
