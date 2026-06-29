@@ -51,26 +51,27 @@ function configFor(level: RadarLevel): RadarConfig {
     maxAlt: 260,
     verticalEnabled: false,
     predictT: 20, // conflict look-ahead (s) — earlier warning for calm resolution
-    gateRadius: 42,
-    etaWindowSec: 16,
+    gateRadius: 56, // generous gate-capture zone: get it to the point, it counts
+    etaWindowSec: 24,
     durationSec: 200,
   };
-  // Handoff windows are generous and clocks long: the challenge is monitoring
+  // Handoff windows are generous (vectoring always adds time, so a late-but-
+  // correct handoff is still essentially a success): the challenge is monitoring
   // and conflict-resolution, not racing slow turns against a short timer.
   switch (level) {
     case 1:
-      return { ...base, etaWindowSec: 18, durationSec: 150 };
+      return { ...base, etaWindowSec: 26, durationSec: 150 };
     case 2:
-      return { ...base, etaWindowSec: 16, durationSec: 200 };
+      return { ...base, etaWindowSec: 24, durationSec: 200 };
     case 3:
-      return { ...base, etaWindowSec: 14, durationSec: 250 };
+      return { ...base, etaWindowSec: 22, durationSec: 250 };
     case 4:
-      return { ...base, etaWindowSec: 14, durationSec: 285 };
+      return { ...base, etaWindowSec: 22, durationSec: 285 };
     case 5:
-      return { ...base, verticalEnabled: true, predictT: 22, etaWindowSec: 12, durationSec: 300 };
+      return { ...base, verticalEnabled: true, predictT: 22, etaWindowSec: 20, durationSec: 300 };
     case 6:
     default:
-      return { ...base, verticalEnabled: true, sepH: 96, predictT: 22, etaWindowSec: 11, durationSec: 370 };
+      return { ...base, verticalEnabled: true, sepH: 96, predictT: 22, etaWindowSec: 18, durationSec: 370 };
   }
 }
 

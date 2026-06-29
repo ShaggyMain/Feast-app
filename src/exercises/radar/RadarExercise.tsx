@@ -103,12 +103,12 @@ function RadarPlay({
     const sc = scoreRadar(w.stats, n);
     onFinish({
       totalItems: n,
-      correct: w.stats.onTimeHandoffs,
-      accuracy: n > 0 ? w.stats.onTimeHandoffs / n : 0,
+      correct: w.stats.handoffs,
+      accuracy: n > 0 ? w.stats.handoffs / n : 0,
       score: sc.raw,
       lines: [
         t('done.stanine', { s: sc.stanine, label: stanineLabel(sc.stanine) }),
-        t('done.handoffs', { n: w.stats.onTimeHandoffs, total: n }),
+        t('done.handoffs', { n: w.stats.handoffs, total: n }),
         t('done.lateEta', { n: w.stats.missedEta }),
         t('done.wrongGate', { n: w.stats.wrongGate }),
         t('done.lost', { n: w.stats.lost }),
@@ -199,7 +199,7 @@ function RadarPlay({
           ⏱ {timeLeft}s
         </AppText>
         <AppText variant="subtitle" color={NORMAL}>
-          ✅ {world.stats.onTimeHandoffs}/{controllableCount}
+          ✅ {world.stats.handoffs}/{controllableCount}
         </AppText>
         <AppText variant="subtitle" color={activeCount ? CONFLICT : theme.textSecondary}>
           ⚠ {activeCount ? activeCount : world.stats.conflictEvents}

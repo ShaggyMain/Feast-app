@@ -3,10 +3,11 @@
  * FEAST-style **stanine** (1–9, 9 = best).
  *
  * Model: every aircraft is worth an equal share of 100. It earns the full
- * share for a clean **on-time** handoff to its assigned gate, half the share
- * for a correct-gate but **late** handoff (outside the ETA window), and nothing
- * for a wrong gate or a track lost off the sector edge. Time spent in active
- * separation loss is then subtracted. Keeping the bonus as a *share of 100*
+ * share for a clean **on-time** handoff to its assigned gate, most of the share
+ * for a correct-gate but **late** handoff (reaching the right gate is the job;
+ * vectoring always adds time, so lateness is only a minor refinement), and
+ * nothing for a wrong gate or a track lost off the sector edge. Time spent in
+ * active separation loss is then subtracted. Keeping the bonus as a *share of 100*
  * (instead of a flat additive bonus the SPEC pseudocode clamps away) means the
  * ceiling stays 100 regardless of traffic count and a conflict can never be
  * masked — it always costs points.
@@ -18,7 +19,7 @@ import { t } from '@/i18n';
 /** Score lost per second of active separation loss. */
 export const K_CONFLICT = 4;
 /** Fraction of an aircraft's share kept for a correct-gate but late handoff. */
-export const ETA_CREDIT = 0.5;
+export const ETA_CREDIT = 0.9;
 
 export interface RadarScore {
   /** 0..100, rounded. */

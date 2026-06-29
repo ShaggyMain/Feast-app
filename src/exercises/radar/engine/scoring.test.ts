@@ -36,13 +36,13 @@ describe('scoreRadar', () => {
     expect(s.stanine).toBe(7);
   });
 
-  it('gives half credit for a correct gate reached late', () => {
+  it('keeps most of the credit for a correct gate reached late', () => {
     const s = scoreRadar(
       { ...emptyStats(), handoffs: 4, onTimeHandoffs: 3, missedEta: 1 },
       4,
     );
-    expect(s.raw).toBe(88); // 3×25 + 1×12.5
-    expect(s.stanine).toBe(7);
+    expect(s.raw).toBe(98); // 3×25 + 1×22.5
+    expect(s.stanine).toBe(9);
   });
 
   it('gives no credit for a lost track', () => {
