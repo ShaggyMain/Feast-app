@@ -74,7 +74,7 @@ function RadarPlay({
   const theme = useTheme();
   const t = useT();
   const { width } = useWindowDimensions();
-  const scopePx = Math.min(width - 2 * Spacing.md, 420);
+  const scopePx = Math.min(width - 2 * Spacing.sm, 460);
 
   const seedRef = useRef(Math.floor(Math.random() * 1e9));
   const scenarioRef = useRef<Scenario | null>(null);
@@ -226,8 +226,8 @@ function RadarPlay({
           return (
             <G key={g.id}>
               <Circle cx={gx} cy={gy} r={cfg.gateRadius * scale} stroke={GATE} strokeWidth={1} strokeDasharray="3 3" fill="none" opacity={0.5} />
-              <Rect x={gx - 5} y={gy - 5} width={10} height={10} fill="none" stroke={GATE} strokeWidth={1.5} transform={`rotate(45, ${gx}, ${gy})`} />
-              <SvgText x={lx} y={gy - 9} fill={GATE} fontSize={10} fontWeight="bold" textAnchor={g.x < cfg.size / 2 ? 'start' : 'end'}>
+              <Rect x={gx - 6} y={gy - 6} width={12} height={12} fill="none" stroke={GATE} strokeWidth={1.5} transform={`rotate(45, ${gx}, ${gy})`} />
+              <SvgText x={lx} y={gy - 10} fill={GATE} fontSize={11} fontWeight="bold" textAnchor={g.x < cfg.size / 2 ? 'start' : 'end'}>
                 {g.name}
               </SvgText>
             </G>
@@ -243,7 +243,7 @@ function RadarPlay({
           const color = a.conflict ? CONFLICT : a.warn ? WARN : base;
           const v = velocity(a.heading, a.speed);
           const mag = Math.hypot(v.vx, v.vy) || 1;
-          const len = 16 + (a.speed / cfg.maxSpeed) * scopePx * 0.14;
+          const len = 18 + (a.speed / cfg.maxSpeed) * scopePx * 0.14;
           const ex = ax + (v.vx / mag) * len;
           const ey = ay + (v.vy / mag) * len;
           const eta = Math.round(a.etaSec - world.elapsedSec);
@@ -253,21 +253,21 @@ function RadarPlay({
           return (
             <G key={a.id}>
               <Circle cx={ax} cy={ay} r={(cfg.sepH / 2) * scale} stroke={color} strokeWidth={1} fill="none" opacity={a.conflict ? 0.5 : 0.14} />
-              {isSel ? <Circle cx={ax} cy={ay} r={15} stroke={SELECTED} strokeWidth={1.5} fill="none" /> : null}
-              <Line x1={ax} y1={ay} x2={ex} y2={ey} stroke={color} strokeWidth={2} />
+              {isSel ? <Circle cx={ax} cy={ay} r={18} stroke={SELECTED} strokeWidth={1.5} fill="none" /> : null}
+              <Line x1={ax} y1={ay} x2={ex} y2={ey} stroke={color} strokeWidth={2.5} />
               {a.controllable ? (
                 <Polygon
-                  points={`${ax},${ay - 8} ${ax - 5.5},${ay + 6} ${ax + 5.5},${ay + 6}`}
+                  points={`${ax},${ay - 10} ${ax - 7},${ay + 7} ${ax + 7},${ay + 7}`}
                   fill={color}
                   transform={`rotate(${a.heading}, ${ax}, ${ay})`}
                 />
               ) : (
-                <Rect x={ax - 5} y={ay - 5} width={10} height={10} fill="none" stroke={color} strokeWidth={2} transform={`rotate(45, ${ax}, ${ay})`} />
+                <Rect x={ax - 6} y={ay - 6} width={12} height={12} fill="none" stroke={color} strokeWidth={2} transform={`rotate(45, ${ax}, ${ay})`} />
               )}
-              <SvgText x={ax + 11} y={ay - 4} fill={isSel ? theme.text : LABEL} fontSize={10} fontWeight="bold">
+              <SvgText x={ax + 13} y={ay - 5} fill={isSel ? theme.text : LABEL} fontSize={12} fontWeight="bold">
                 {a.callsign}
               </SvgText>
-              <SvgText x={ax + 11} y={ay + 8} fill={LABEL} fontSize={9}>
+              <SvgText x={ax + 13} y={ay + 9} fill={LABEL} fontSize={11}>
                 {a.controllable
                   ? `→${gate?.name ?? ''}  ${eta >= 0 ? eta + 's' : '!'}${vertical ? '  ' + fl : ''}`
                   : vertical
@@ -276,7 +276,7 @@ function RadarPlay({
               </SvgText>
               {/* enlarged transparent hit target (controllable only) */}
               {a.controllable ? (
-                <Circle cx={ax} cy={ay} r={22} fill="transparent" onPress={() => selectPlane(a.id)} />
+                <Circle cx={ax} cy={ay} r={28} fill="transparent" onPress={() => selectPlane(a.id)} />
               ) : null}
             </G>
           );
@@ -299,7 +299,7 @@ function RadarPlay({
 }
 
 const styles = StyleSheet.create({
-  wrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.sm, padding: Spacing.md },
+  wrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.sm, padding: Spacing.sm },
   hud: {
     flexDirection: 'row',
     justifyContent: 'space-between',

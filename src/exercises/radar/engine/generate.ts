@@ -23,8 +23,10 @@ import { mulberry32, pick, randInt, type Rng } from '@/core/rng';
 const SIZE = 1000;
 /** Entry ring radius from centre (fraction of size). Clear of the edge gates. */
 const ENTRY_FRAC = 0.44;
-/** Nominal cruise speed (sim units/sec); jittered per aircraft. */
-const BASE_SPEED = 22;
+/** Nominal cruise speed (sim units/sec); jittered per aircraft. Deliberately
+ *  unhurried so a standard-rate (3°/s) vector has time to take effect before the
+ *  handoff — matching the real DART's pace, where you re-vector calmly. */
+const BASE_SPEED = 16;
 /** Default flight level for the flat (L1–L4) scenarios. */
 const CRUISE = 200;
 /** Flight levels used when the altitude layer is in play (≥ sepV apart). */
@@ -40,33 +42,35 @@ function configFor(level: RadarLevel): RadarConfig {
     size: SIZE,
     turnRate: 3, // deg/s — standard rate turn
     aRate: 10, // units/s²
-    minSpeed: 14,
-    maxSpeed: 34,
+    minSpeed: 11,
+    maxSpeed: 26,
     sepH: 92,
     sepV: 15, // flight levels are 20 apart → adjacent lanes are safe
     climbRate: 3, // altitude units/s (one 20-unit level ≈ 6.7 s)
     minAlt: 160,
     maxAlt: 260,
     verticalEnabled: false,
-    predictT: 16,
+    predictT: 20, // conflict look-ahead (s) — earlier warning for calm resolution
     gateRadius: 42,
-    etaWindowSec: 13,
-    durationSec: 150,
+    etaWindowSec: 16,
+    durationSec: 200,
   };
+  // Handoff windows are generous and clocks long: the challenge is monitoring
+  // and conflict-resolution, not racing slow turns against a short timer.
   switch (level) {
     case 1:
-      return { ...base, etaWindowSec: 16, durationSec: 110 };
+      return { ...base, etaWindowSec: 18, durationSec: 150 };
     case 2:
-      return { ...base, etaWindowSec: 13, durationSec: 150 };
+      return { ...base, etaWindowSec: 16, durationSec: 200 };
     case 3:
-      return { ...base, etaWindowSec: 11, durationSec: 190 };
+      return { ...base, etaWindowSec: 14, durationSec: 250 };
     case 4:
-      return { ...base, etaWindowSec: 11, durationSec: 210 };
+      return { ...base, etaWindowSec: 14, durationSec: 285 };
     case 5:
-      return { ...base, verticalEnabled: true, predictT: 18, etaWindowSec: 9, durationSec: 220 };
+      return { ...base, verticalEnabled: true, predictT: 22, etaWindowSec: 12, durationSec: 300 };
     case 6:
     default:
-      return { ...base, verticalEnabled: true, sepH: 96, predictT: 18, etaWindowSec: 8, durationSec: 270 };
+      return { ...base, verticalEnabled: true, sepH: 96, predictT: 22, etaWindowSec: 11, durationSec: 370 };
   }
 }
 
