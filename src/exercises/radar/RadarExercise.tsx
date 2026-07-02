@@ -109,7 +109,6 @@ function RadarPlay({
       lines: [
         t('done.stanine', { s: sc.stanine, label: stanineLabel(sc.stanine) }),
         t('done.handoffs', { n: w.stats.handoffs, total: n }),
-        t('done.lateEta', { n: w.stats.missedEta }),
         t('done.wrongGate', { n: w.stats.wrongGate }),
         t('done.lost', { n: w.stats.lost }),
         t('done.conflictTime', { s: Math.round(w.stats.conflictSeconds) }),

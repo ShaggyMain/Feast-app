@@ -2,12 +2,12 @@
  * Radar scoring: turn accumulated `RadarStats` into a 0–100 raw score and a
  * FEAST-style **stanine** (1–9, 9 = best).
  *
- * Model: every aircraft is worth an equal share of 100. It earns the full
- * share for a clean **on-time** handoff to its assigned gate, most of the share
- * for a correct-gate but **late** handoff (reaching the right gate is the job;
- * vectoring always adds time, so lateness is only a minor refinement), and
- * nothing for a wrong gate or a track lost off the sector edge. Time spent in
- * active separation loss is then subtracted. Keeping the bonus as a *share of 100*
+ * Model: every aircraft is worth an equal share of 100, earned in full for a
+ * handoff to its **assigned gate** (reaching the right gate is the job — and
+ * since resolving a conflict always means vectoring, which adds time, timeliness
+ * must not cap a clean run below 100). A wrong gate or a track lost off the
+ * sector edge earns nothing. Time spent in active separation loss is then
+ * subtracted. Keeping the bonus as a *share of 100*
  * (instead of a flat additive bonus the SPEC pseudocode clamps away) means the
  * ceiling stays 100 regardless of traffic count and a conflict can never be
  * masked — it always costs points.
@@ -18,8 +18,10 @@ import { t } from '@/i18n';
 
 /** Score lost per second of active separation loss. */
 export const K_CONFLICT = 4;
-/** Fraction of an aircraft's share kept for a correct-gate but late handoff. */
-export const ETA_CREDIT = 0.9;
+/** Fraction of an aircraft's share kept for a correct-gate but late handoff.
+ *  Full credit: a correct handoff is a success; lateness is tracked for feedback
+ *  but never docks the score (you can't avoid it while resolving conflicts). */
+export const ETA_CREDIT = 1;
 
 export interface RadarScore {
   /** 0..100, rounded. */

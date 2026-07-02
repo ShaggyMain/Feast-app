@@ -90,6 +90,11 @@ function MPFullPlay({
   const scopePx = Math.min(width - 2 * Spacing.md, 240);
   const sep = params.sepFrac * scopePx;
   const speed = params.radarSpeedFrac * scopePx;
+  // Blips live inside the round scope (matching the drawn ring at r = 0.42),
+  // bouncing off the circle instead of an invisible square.
+  const cx0 = scopePx / 2;
+  const cy0 = scopePx / 2;
+  const scopeR = scopePx * 0.42 - 4;
 
   const rngRef = useRef(mulberry32(Math.floor(Math.random() * 1e9)));
   const rng = rngRef.current;
@@ -101,13 +106,17 @@ function MPFullPlay({
   if (!targetRef.current) targetRef.current = genCallsign(rng);
   const blipsRef = useRef<Blip[]>([]);
   if (blipsRef.current.length === 0) {
-    blipsRef.current = Array.from({ length: params.radarBlips }, (_, i) => ({
-      id: `b${i}`,
-      x: scopePx * (0.2 + rng() * 0.6),
-      y: scopePx * (0.2 + rng() * 0.6),
-      heading: Math.floor(rng() * 360),
-      conflict: false,
-    }));
+    blipsRef.current = Array.from({ length: params.radarBlips }, (_, i) => {
+      const ang = rng() * Math.PI * 2;
+      const rad = Math.sqrt(rng()) * scopeR * 0.85; // spread across the disc, off the edge
+      return {
+        id: `b${i}`,
+        x: cx0 + Math.cos(ang) * rad,
+        y: cy0 + Math.sin(ang) * rad,
+        heading: Math.floor(rng() * 360),
+        conflict: false,
+      };
+    });
   }
 
   const episodeRef = useRef<Episode | null>(null);
@@ -227,17 +236,23 @@ function MPFullPlay({
       // --- radar: move + bounce ---
       const blips = blipsRef.current.map((b) => {
         let { x, y, heading } = b;
-        const vx = Math.sin((heading * Math.PI) / 180) * speed * dt;
-        const vy = -Math.cos((heading * Math.PI) / 180) * speed * dt;
-        x += vx;
-        y += vy;
-        if (x < 8 || x > scopePx - 8) {
-          heading = (360 - heading + 360) % 360; // reflect across the vertical wall
-          x = Math.max(8, Math.min(scopePx - 8, x));
-        }
-        if (y < 8 || y > scopePx - 8) {
-          heading = (180 - heading + 360) % 360; // reflect across the horizontal wall
-          y = Math.max(8, Math.min(scopePx - 8, y));
+        x += Math.sin((heading * Math.PI) / 180) * speed * dt;
+        y += -Math.cos((heading * Math.PI) / 180) * speed * dt;
+        // bounce off the round scope: reflect the heading across the radial normal
+        const dx = x - cx0;
+        const dy = y - cy0;
+        const d = Math.hypot(dx, dy);
+        if (d > scopeR) {
+          const nx = dx / d;
+          const ny = dy / d;
+          let vx = Math.sin((heading * Math.PI) / 180);
+          let vy = -Math.cos((heading * Math.PI) / 180);
+          const dot2 = 2 * (vx * nx + vy * ny);
+          vx -= dot2 * nx;
+          vy -= dot2 * ny;
+          heading = ((Math.atan2(vx, -vy) * 180) / Math.PI + 360) % 360;
+          x = cx0 + nx * scopeR;
+          y = cy0 + ny * scopeR;
         }
         return { ...b, x, y, heading, conflict: false };
       });

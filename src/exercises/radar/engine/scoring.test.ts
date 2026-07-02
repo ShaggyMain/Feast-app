@@ -36,12 +36,12 @@ describe('scoreRadar', () => {
     expect(s.stanine).toBe(7);
   });
 
-  it('keeps most of the credit for a correct gate reached late', () => {
+  it('gives full credit for a correct gate even if reached late', () => {
     const s = scoreRadar(
       { ...emptyStats(), handoffs: 4, onTimeHandoffs: 3, missedEta: 1 },
       4,
     );
-    expect(s.raw).toBe(98); // 3×25 + 1×22.5
+    expect(s.raw).toBe(100); // 3×25 + 1×25 — lateness does not dock the score
     expect(s.stanine).toBe(9);
   });
 

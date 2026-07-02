@@ -229,5 +229,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: Spacing.sm,
   },
-  shape: { fontSize: 64, fontWeight: '800' },
+  // lineHeight must exceed fontSize or the glyph gets clipped (the base `body`
+  // variant's lineHeight:21 would otherwise crop a 64px shape top and bottom).
+  shape: { fontSize: 64, lineHeight: 78, fontWeight: '800', textAlign: 'center' },
 });
