@@ -388,6 +388,10 @@ export function PlayItem({ item, timeLimitMs, accent, onComplete }: PlayItemProp
   // high on screen, clear of the keyboard, regardless of its reported height
   // (choice items keep the prompt centered with options at the bottom).
   const isChoice = item.mode === 'choice' && !!item.choices;
+  // Cube/rotation options are big coloured cards, so the green(correct)/red(wrong)
+  // highlight IS the feedback — skip the "Correct!"/"Wrong" text that crowds and
+  // overlaps this figure-heavy layout.
+  const visualChoice = isChoice && !!item.choices?.some((c) => c.figure);
 
   return (
     <View style={styles.flexCenter}>
@@ -395,7 +399,7 @@ export function PlayItem({ item, timeLimitMs, accent, onComplete }: PlayItemProp
 
       <View style={[styles.promptBlock, !isChoice && styles.promptBlockTop]}>
         {item.promptFigure ? (
-          <Figure spec={item.promptFigure} accent={accent} size={item.promptFigure.type === 'net' ? 168 : 132} />
+          <Figure spec={item.promptFigure} accent={accent} size={item.promptFigure.type === 'net' ? 140 : 132} />
         ) : null}
         {item.figure ? <Figure spec={item.figure} accent={accent} /> : null}
         <Text style={[item.promptFigure ? styles.promptSmall : styles.prompt, { color: theme.text }]}>
@@ -404,7 +408,7 @@ export function PlayItem({ item, timeLimitMs, accent, onComplete }: PlayItemProp
         {item.hint ? <Text style={[styles.hint, { color: theme.textSecondary }]}>{item.hint}</Text> : null}
       </View>
 
-      {showFeedback ? (
+      {visualChoice ? null : showFeedback ? (
         <Text style={[styles.feedback, { color: outcome?.correct ? theme.success : theme.danger }]}>
           {outcome?.correct
             ? t('runner.correct')
