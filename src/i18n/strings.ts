@@ -182,6 +182,17 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     'exam.bestExam': 'Najlepszy egzamin: {best}',
     'exam.progress': 'Egzamin · {i} / {n}',
 
+    // mix training (per module)
+    'mix.button': 'Trening mieszany',
+    'mix.cardBody': 'Kilkanaście losowych zadań ze wszystkich segmentów tego działu, jedno po drugim.',
+    'mix.start': 'Zacznij trening mieszany',
+    'mix.title': 'Trening mieszany',
+    'mix.introBody': 'Zestaw {n} zadań ze wszystkich segmentów działu „{module}", jedno po drugim.',
+    'mix.doneTitle': 'Trening mieszany ukończony',
+    'mix.progress': 'Trening · {i} / {n}',
+    'mix.byExercise': 'WG ĆWICZENIA',
+    'mix.unavailable': 'Ten dział nie ma zadań pytaniowych do wymieszania.',
+
     // modules
     'mod.math.title': 'Matematyka pod czas',
     'mod.math.sub': 'Prędkość–dystans–czas, działania, procenty, kursy',
@@ -543,6 +554,17 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     'exam.newRecord': 'New exam record! Previous: {prev}',
     'exam.bestExam': 'Best exam: {best}',
     'exam.progress': 'Exam · {i} / {n}',
+
+    // mix training (per module)
+    'mix.button': 'Mix training',
+    'mix.cardBody': 'A dozen-plus random questions from every segment of this module, back-to-back.',
+    'mix.start': 'Start mix training',
+    'mix.title': 'Mix training',
+    'mix.introBody': '{n} questions drawn from every segment of “{module}”, back-to-back.',
+    'mix.doneTitle': 'Mix training complete',
+    'mix.progress': 'Mix · {i} / {n}',
+    'mix.byExercise': 'BY EXERCISE',
+    'mix.unavailable': 'This module has no question exercises to mix.',
 
     // modules
     'mod.math.title': 'Maths under time',

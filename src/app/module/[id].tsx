@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { Spacing } from '@/constants/theme';
 import { exercisesForModule, getModule } from '@/data/registry';
+import { mixableDefs } from '@/runner/MixRunner';
 import { useTheme } from '@/hooks/use-theme';
 import { useT } from '@/i18n/useT';
 import { useResultsStore } from '@/store/results';
@@ -16,6 +17,7 @@ export default function ModuleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const t = useT();
+  const theme = useTheme();
   const moduleMeta = getModule(id ?? '');
   const exercises = exercisesForModule(id ?? '');
   const results = useResultsStore((s) => s.results);
@@ -27,6 +29,18 @@ export default function ModuleScreen() {
       <AppText variant="bodyMuted">
         {moduleMeta ? t(moduleMeta.subtitle) : t('module.notFound')}
       </AppText>
+
+      {mixableDefs(id ?? '').length >= 2 ? (
+        <View style={[styles.mixCard, { borderColor: moduleMeta?.color ?? theme.tint, backgroundColor: theme.surface }]}>
+          <AppText variant="subtitle">{t('mix.button')}</AppText>
+          <AppText variant="bodyMuted">{t('mix.cardBody')}</AppText>
+          <PrimaryButton
+            label={t('mix.start')}
+            onPress={() => router.push(`/mix/${id}`)}
+            style={styles.startBtn}
+          />
+        </View>
+      ) : null}
 
       {exercises.length === 0 ? (
         <Card>
@@ -68,6 +82,7 @@ export default function ModuleScreen() {
 }
 
 const styles = StyleSheet.create({
+  mixCard: { borderWidth: 1.5, borderRadius: 16, padding: Spacing.md, gap: Spacing.xs },
   metaRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
