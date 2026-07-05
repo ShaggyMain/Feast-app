@@ -22,6 +22,7 @@ import { Screen } from '@/ui/Screen';
 import { PrimaryButton } from '@/ui/PrimaryButton';
 import { Stat } from '@/ui/Stat';
 import { AppText } from '@/ui/Text';
+import { MixNextButton } from '@/runner/MixNextButton';
 import { useT } from '@/i18n/useT';
 import type { RadarLevel } from './engine/types';
 
@@ -217,6 +218,7 @@ export function RadarShell({
           </AppText>
         </View>
         <View style={styles.actions}>
+          <MixNextButton exerciseId={def.id} />
           <PrimaryButton label={t('common.retry')} onPress={start} />
           <PrimaryButton label={t('common.changeLevel')} variant="secondary" onPress={() => setPhase('intro')} />
           <PrimaryButton label={t('common.back')} variant="ghost" onPress={() => router.back()} />

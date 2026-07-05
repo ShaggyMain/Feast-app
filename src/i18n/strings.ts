@@ -192,6 +192,9 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     'mix.progress': 'Trening · {i} / {n}',
     'mix.byExercise': 'WG ĆWICZENIA',
     'mix.unavailable': 'Ten dział nie ma zadań pytaniowych do wymieszania.',
+    'mix.cardBodyCircuit': 'Wszystkie ćwiczenia tego działu jedno po drugim — wybierasz poziom przy każdym i klikasz „Dalej".',
+    'mix.next': 'Dalej: {name}',
+    'mix.finish': 'Zakończ trening',
 
     // modules
     'mod.math.title': 'Matematyka pod czas',
@@ -565,6 +568,9 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     'mix.progress': 'Mix · {i} / {n}',
     'mix.byExercise': 'BY EXERCISE',
     'mix.unavailable': 'This module has no question exercises to mix.',
+    'mix.cardBodyCircuit': 'Every exercise in this module, back-to-back — pick a level for each and tap “Next” to chain them.',
+    'mix.next': 'Next: {name}',
+    'mix.finish': 'Finish mix',
 
     // modules
     'mod.math.title': 'Maths under time',

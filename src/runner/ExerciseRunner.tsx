@@ -33,6 +33,7 @@ import { Stat } from '@/ui/Stat';
 import { AppText } from '@/ui/Text';
 import { SegmentedControl } from '@/ui/SegmentedControl';
 import { Figure } from '@/ui/Figure';
+import { MixNextButton } from '@/runner/MixNextButton';
 import { useT } from '@/i18n/useT';
 
 const FEEDBACK_MS = 650;
@@ -181,6 +182,7 @@ export function ExerciseRunner({ exerciseId }: { exerciseId: string }) {
         prevBest={prevBestRef.current}
         accent={accent}
         reviews={reviews}
+        exerciseId={def.id}
         onRetry={start}
         onChangeLevel={() => setPhase('intro')}
         onBack={() => router.back()}
@@ -518,6 +520,7 @@ function ResultsView({
   prevBest,
   accent,
   reviews,
+  exerciseId,
   onRetry,
   onChangeLevel,
   onBack,
@@ -526,6 +529,7 @@ function ResultsView({
   prevBest: number;
   accent: string;
   reviews: ItemReview[];
+  exerciseId: string;
   onRetry: () => void;
   onChangeLevel: () => void;
   onBack: () => void;
@@ -596,6 +600,7 @@ function ResultsView({
       ) : null}
 
       <View style={styles.actions}>
+        <MixNextButton exerciseId={exerciseId} />
         <PrimaryButton label={t('common.retry')} onPress={onRetry} />
         <PrimaryButton label={t('common.changeLevel')} variant="secondary" onPress={onChangeLevel} />
         <PrimaryButton label={t('common.stats')} variant="ghost" onPress={() => router.push('/stats')} />

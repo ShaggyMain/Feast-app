@@ -23,6 +23,7 @@ import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { Screen } from '@/ui/Screen';
 import { PrimaryButton } from '@/ui/PrimaryButton';
+import { MixNextButton } from '@/runner/MixNextButton';
 import { SegmentedControl } from '@/ui/SegmentedControl';
 import { Stat } from '@/ui/Stat';
 import { AppText } from '@/ui/Text';
@@ -157,6 +158,7 @@ export function ReactionExercise({ exerciseId, kind }: { exerciseId: string; kin
           </AppText>
         </View>
         <View style={styles.actions}>
+          <MixNextButton exerciseId={exerciseId} />
           <PrimaryButton label={t('common.retry')} onPress={start} />
           <PrimaryButton label={t('common.changeLevel')} variant="secondary" onPress={() => setPhase('intro')} />
           <PrimaryButton label={t('common.back')} variant="ghost" onPress={() => router.back()} />

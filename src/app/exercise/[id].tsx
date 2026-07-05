@@ -18,25 +18,27 @@ export default function ExerciseScreen() {
   const runner = exercise?.runner ?? 'standard';
   const t = useT();
 
+  // key={exerciseId}: a mix playlist replaces this route with a different id;
+  // the key forces a fresh mount so the new game doesn't inherit stale state.
   function renderRunner() {
     switch (runner) {
       case 'reaction-simple':
       case 'reaction-gonogo':
-        return <ReactionExercise exerciseId={exerciseId} kind={runner} />;
+        return <ReactionExercise key={exerciseId} exerciseId={exerciseId} kind={runner} />;
       case 'memory':
-        return <MemoryExercise exerciseId={exerciseId} />;
+        return <MemoryExercise key={exerciseId} exerciseId={exerciseId} />;
       case 'nback':
-        return <NBackExercise exerciseId={exerciseId} />;
+        return <NBackExercise key={exerciseId} exerciseId={exerciseId} />;
       case 'multipass':
-        return <MultipassExercise exerciseId={exerciseId} />;
+        return <MultipassExercise key={exerciseId} exerciseId={exerciseId} />;
       case 'multipass-full':
-        return <MultipassFullExercise exerciseId={exerciseId} />;
+        return <MultipassFullExercise key={exerciseId} exerciseId={exerciseId} />;
       case 'radar':
-        return <RadarExercise exerciseId={exerciseId} />;
+        return <RadarExercise key={exerciseId} exerciseId={exerciseId} />;
       case 'rct':
-        return <RctExercise exerciseId={exerciseId} />;
+        return <RctExercise key={exerciseId} exerciseId={exerciseId} />;
       default:
-        return <ExerciseRunner exerciseId={exerciseId} />;
+        return <ExerciseRunner key={exerciseId} exerciseId={exerciseId} />;
     }
   }
 

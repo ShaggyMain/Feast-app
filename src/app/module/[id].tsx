@@ -4,6 +4,8 @@ import { StyleSheet, View } from 'react-native';
 import { Spacing } from '@/constants/theme';
 import { exercisesForModule, getModule } from '@/data/registry';
 import { mixableDefs } from '@/runner/MixRunner';
+import { useMixStore } from '@/store/mix';
+import { mulberry32, shuffle } from '@/core/rng';
 import { useTheme } from '@/hooks/use-theme';
 import { useT } from '@/i18n/useT';
 import { useResultsStore } from '@/store/results';
@@ -21,6 +23,24 @@ export default function ModuleScreen() {
   const moduleMeta = getModule(id ?? '');
   const exercises = exercisesForModule(id ?? '');
   const results = useResultsStore((s) => s.results);
+  const startMix = useMixStore((s) => s.start);
+
+  // A question-item module (Math/Spatial) mixes questions; a module with
+  // interactive games (Memory/Reaction) runs them as a guided back-to-back
+  // playlist instead.
+  const hasCustom = exercises.some((e) => (e.runner ?? 'standard') !== 'standard');
+  const canQuestionMix = !hasCustom && mixableDefs(id ?? '').length >= 2;
+  const canPlaylist = hasCustom && exercises.length >= 2;
+
+  const onMix = () => {
+    if (canQuestionMix) {
+      router.push(`/mix/${id}`);
+    } else {
+      const queue = shuffle(mulberry32(Date.now() >>> 0), exercises.map((e) => e.id));
+      startMix(id ?? '', queue);
+      router.push(`/exercise/${queue[0]}`);
+    }
+  };
 
   return (
     <Screen>
@@ -30,15 +50,11 @@ export default function ModuleScreen() {
         {moduleMeta ? t(moduleMeta.subtitle) : t('module.notFound')}
       </AppText>
 
-      {mixableDefs(id ?? '').length >= 2 ? (
+      {canQuestionMix || canPlaylist ? (
         <View style={[styles.mixCard, { borderColor: moduleMeta?.color ?? theme.tint, backgroundColor: theme.surface }]}>
           <AppText variant="subtitle">{t('mix.button')}</AppText>
-          <AppText variant="bodyMuted">{t('mix.cardBody')}</AppText>
-          <PrimaryButton
-            label={t('mix.start')}
-            onPress={() => router.push(`/mix/${id}`)}
-            style={styles.startBtn}
-          />
+          <AppText variant="bodyMuted">{t(canQuestionMix ? 'mix.cardBody' : 'mix.cardBodyCircuit')}</AppText>
+          <PrimaryButton label={t('mix.start')} onPress={onMix} style={styles.startBtn} />
         </View>
       ) : null}
 

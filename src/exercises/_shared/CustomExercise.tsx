@@ -23,6 +23,7 @@ import { PrimaryButton } from '@/ui/PrimaryButton';
 import { SegmentedControl } from '@/ui/SegmentedControl';
 import { Stat } from '@/ui/Stat';
 import { AppText } from '@/ui/Text';
+import { MixNextButton } from '@/runner/MixNextButton';
 import { useT } from '@/i18n/useT';
 
 const LEVELS: Difficulty[] = ['easy', 'medium', 'hard'];
@@ -167,6 +168,7 @@ export function CustomExerciseShell({
           </AppText>
         </View>
         <View style={styles.actions}>
+          <MixNextButton exerciseId={def.id} />
           <PrimaryButton label={t('common.retry')} onPress={start} />
           <PrimaryButton label={t('common.changeLevel')} variant="secondary" onPress={() => setPhase('intro')} />
           <PrimaryButton label={t('common.back')} variant="ghost" onPress={() => router.back()} />
