@@ -52,20 +52,28 @@ describe('buildNbackSequence', () => {
 });
 
 describe('buildGaugeRound', () => {
-  it('has distinct values and exactly one correct recall option', () => {
+  it('quizzes several distinct gauges (scaling with the set), one correct option each', () => {
     for (let count = 4; count <= 7; count++) {
       for (let seed = 0; seed < 200; seed++) {
         const round = buildGaugeRound(mulberry32(seed * 13 + count), count);
         expect(round.values.length).toBe(count);
         expect(new Set(round.values).size).toBe(count);
-        expect(round.answer).toBe(round.values[round.recallIndex]);
 
-        const choices = round.choices;
-        expect(choices.length).toBe(4);
-        expect(new Set(choices.map((c) => c.label)).size).toBe(4);
-        const correct = choices.filter((c) => c.id === round.correctChoiceId);
-        expect(correct).toHaveLength(1);
-        expect(correct[0].label).toBe(String(round.answer));
+        // more than one query, all distinct, capped sensibly
+        expect(round.questions.length).toBeGreaterThanOrEqual(2);
+        expect(round.questions.length).toBeLessThanOrEqual(Math.min(3, count));
+        expect(new Set(round.questions.map((q) => q.recallIndex)).size).toBe(round.questions.length);
+
+        for (const q of round.questions) {
+          expect(q.recallIndex).toBeGreaterThanOrEqual(0);
+          expect(q.recallIndex).toBeLessThan(count);
+          expect(q.answer).toBe(round.values[q.recallIndex]);
+          expect(q.choices.length).toBe(4);
+          expect(new Set(q.choices.map((c) => c.label)).size).toBe(4);
+          const correct = q.choices.filter((c) => c.id === q.correctChoiceId);
+          expect(correct).toHaveLength(1);
+          expect(correct[0].label).toBe(String(q.answer));
+        }
       }
     }
   });
