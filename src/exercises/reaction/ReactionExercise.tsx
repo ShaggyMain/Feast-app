@@ -311,8 +311,11 @@ function GoNoGo({
   const { trials, windowMs, isiMs, goRatio } = params;
   const seqRef = useRef<Array<'go' | 'nogo'>>(buildSequence(trials, goRatio));
   const [idx, setIdx] = useState(0);
-  const [phase, setPhase] = useState<'blank' | 'stim'>('blank');
-  const stim = seqRef.current[Math.min(idx, trials - 1)];
+  // What the panel currently shows; `null` is the blank ISI gap. Kept separate
+  // from `idx` on purpose: advancing the trial must never pull the *next*
+  // stimulus onto the screen before the blank gap, which would reveal (GO vs
+  // STOP) a frame early and let you know whether to tap before the icon shows.
+  const [shown, setShown] = useState<'go' | 'nogo' | null>(null);
 
   const respondedRef = useRef(false);
   const stimAtRef = useRef(0);
@@ -349,17 +352,19 @@ function GoNoGo({
     }
     let cancelled = false;
     respondedRef.current = false;
-    setPhase('blank');
+    setShown(null);
     const isiTimer = setTimeout(() => {
       if (cancelled) return;
       stimAtRef.current = Date.now();
-      setPhase('stim');
+      setShown(seqRef.current[idx]);
       windowTimer.current = setTimeout(() => {
         if (cancelled) return;
         if (!respondedRef.current) {
           if (seqRef.current[idx] === 'go') missesRef.current += 1;
           else correctRejRef.current += 1;
         }
+        // Blank the panel *before* advancing so the next stimulus can't flash.
+        setShown(null);
         setIdx((i) => i + 1);
       }, windowMs);
     }, isiMs);
@@ -371,7 +376,7 @@ function GoNoGo({
   }, [idx, trials, windowMs, isiMs, finish]);
 
   const handlePress = () => {
-    if (phase !== 'stim' || respondedRef.current) return;
+    if (shown === null || respondedRef.current) return;
     respondedRef.current = true;
     if (seqRef.current[idx] === 'go') {
       hitsRef.current.push(Date.now() - stimAtRef.current);
@@ -381,12 +386,15 @@ function GoNoGo({
       feedback('wrong');
     }
     if (windowTimer.current) clearTimeout(windowTimer.current);
-    setTimeout(() => setIdx((i) => i + 1), 220);
+    setTimeout(() => {
+      setShown(null);
+      setIdx((i) => i + 1);
+    }, 220);
   };
 
-  const showStim = phase === 'stim';
-  const bg = showStim ? (stim === 'go' ? theme.success : theme.danger) : theme.surfaceAlt;
-  const title = showStim ? (stim === 'go' ? 'GO' : 'STOP') : '·';
+  const showStim = shown !== null;
+  const bg = showStim ? (shown === 'go' ? theme.success : theme.danger) : theme.surfaceAlt;
+  const title = showStim ? (shown === 'go' ? 'GO' : 'STOP') : '·';
 
   return (
     <Pressable style={[styles.fullArea, { backgroundColor: bg }]} onPress={handlePress}>
